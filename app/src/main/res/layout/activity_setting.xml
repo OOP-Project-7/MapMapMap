@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:text="INIT"
+        android:id="@+id/initButton"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_alignBottom="@+id/doneButton"
+        android:layout_toEndOf="@+id/doneButton"
+        android:layout_marginStart="11dp"/>
+
+    <TextView
+        android:text="FootPrint Setting page"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/initButton"
+        android:layout_marginEnd="13dp"
+        android:layout_marginTop="120dp"
+        android:id="@+id/textView2" />
+
+    <Button
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:text="DONE"
+        android:id="@+id/doneButton"
+        android:textAllCaps="false"
+        android:layout_marginStart="34dp"
+        android:layout_marginBottom="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>
