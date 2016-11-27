@@ -1,10 +1,19 @@
 package com.example.s535.mapmapmap;
 
+import android.content.Context;
+import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -30,20 +39,74 @@ import static com.example.s535.mapmapmap.R.mipmap.bear_blue;
 public class MapsActivity1 extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
     private GoogleApiClient client;
     private List<Player> map1PlayerList;
+    /*status bar를 위한 변수선언(자기 자신에 대한 정보)*/
+    private String UserProfile;
+    private int UserTag;
+    private double lat,lng;
+    private TextView Bar_Profile, Bar_Tag;
+    private ToggleButton Bar_GPSToggle;
+    private ImageButton Bar_Setting;
+    private LocationManager lm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
            super.onCreate(savedInstanceState);
            setContentView(R.layout.activity_maps1);
-        //사용자들 정보 갱신하는 체크박스 리스너를 만들고 몇초마다 갱신하게 설정해주자
+        /*상태바를 위한 onCreate함수 구현*/
+        {
+            Bar_Profile = (TextView)findViewById(R.id.Bar_Profile);
+            Bar_Tag=(TextView)findViewById(R.id.Bar_Tag);
+            Bar_GPSToggle=(ToggleButton) findViewById(R.id.Bar_GPSToggle);
+            Bar_Setting=(ImageButton)findViewById(R.id.Bar_Setting);
+            lm=(LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
+            /*getIntent로 정보 받아와야함*/
+            UserProfile="상메";
+            UserTag=0;
+            Bar_Profile.setText(UserProfile);
+            Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+            Bar_Setting.setBackgroundResource(R.mipmap.settingbutton);
+            switch (UserTag)
+            {
+                case 0: Bar_Tag.setText("A");
+                    break;
+                case 1: Bar_Tag.setText("B");
+                    break;
+                case 2: Bar_Tag.setText("C");
+                    break;
+            }
+
+        /*Bar_Loc설정*/
+
+            Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        if (Bar_GPSToggle.isChecked()) {
+                            Bar_GPSToggle.setBackgroundResource(R.mipmap.refreshbutton);
+                            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 1, mLocationListener);
+                            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1, mLocationListener);
+                        } else {
+                            Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+                            lm.removeUpdates(mLocationListener);
+                        }
+                    }catch (SecurityException ex) {
+                    }
+                }
+            });
+
+            Bar_Setting.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MapsActivity1.this, SettingActivity.class);
+                /*putExtra 사용자 정보*/
+                    startActivity(intent);
+                }
+            });
+        }
     // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -68,17 +131,6 @@ public class MapsActivity1 extends FragmentActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
 
-        final CheckBox myCheckBox=(CheckBox) findViewById(R.id.getFromServerCheckBox);
-        myCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(myCheckBox.isChecked()==true){
-                    //일정시간마다 서버에서 정보불러와서
-                    getPlayers(map1PlayerList); //리스트 업데이트
-                    drawPlayers(map1PlayerList, googleMap);
-                }
-            }
-        });
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(36.011791, 129.321883) //위도 경도
@@ -214,6 +266,33 @@ public class MapsActivity1 extends FragmentActivity implements OnMapReadyCallbac
         }*/
         //여기까지해서 리스트 만들었다 이제 맵에 표지하자
     }
+
+    private final LocationListener mLocationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+
+            double longitude = location.getLongitude(); //경도
+            double latitude = location.getLatitude();   //위도
+            double altitude = location.getAltitude();   //고도
+            float accuracy = location.getAccuracy();    //정확도
+            String provider = location.getProvider();   //위치제공자
+            /*자기자신 정보를 DB에 보내는 코드 작성*/
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
 }
 
 /**
