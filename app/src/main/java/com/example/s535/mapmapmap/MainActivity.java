@@ -6,9 +6,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -16,10 +13,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
+
         Handler handler = new Handler() {
             public void handleMessage (Message msg){
                 super.handleMessage(msg);
-                //List<String>=new ArrayList<String>;
+
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 finish();
             }
