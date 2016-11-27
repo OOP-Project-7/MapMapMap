@@ -263,7 +263,6 @@ public class SettingActivity extends Activity implements View.OnClickListener{
 
                 Firebase childRef1 = mRef1.child("Users");
                 Firebase childRef2 = mRef2.child("Users");
-
                 childRef1.push().setValue(new User(foot_type, foot_color, tag_type, year, month, day));
                 childRef2.push().setValue(new User(foot_type, foot_color, tag_type, year, month, day));
                 Intent intent = new Intent(getApplicationContext(), SubActivity1.class);

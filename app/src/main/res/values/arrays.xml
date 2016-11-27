@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="foot_type">
+        <item>곰발바닥</item>
+        <item>새발바닥</item>
+        <item>개구리발바닥</item>
+    </string-array>
+    <string-array name="foot_color">
+        <item>검정</item>
+        <item>빨강</item>
+        <item>파랑</item>
+    </string-array>
+    <string-array name="tag_type">
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+    </string-array>
+</resources>
