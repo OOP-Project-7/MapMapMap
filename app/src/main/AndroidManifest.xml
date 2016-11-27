@@ -31,28 +31,23 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_maps">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
-<<<<<<< HEAD
 
-        <activity
-            android:name=".SubActivity1">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-        </activity>
-
-=======
+        <activity android:name=".SubActivity1"></activity>
         <activity android:name=".LoginActivity"></activity>
         <activity android:name=".SettingActivity"></activity>
-        <activity android:name=".MapsActivity"></activity>
->>>>>>> origin/master
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
+        <activity android:name=".MapsActivity1"></activity>
+        <activity android:name=".MapsActivity2"></activity>
+        <activity android:name=".MapsActivity3"></activity>
+        <activity android:name=".MapsActivity4"></activity>
+        <activity android:name=".MapsActivityLibrary"></activity>
+
     </application>
 
 </manifest>

@@ -1,24 +1,24 @@
 package com.example.s535.mapmapmap;
 
-import android.net.Uri;
+import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     /**
@@ -30,10 +30,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.activity_maps2);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(R.id.map2);
         mapFragment.getMapAsync(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -52,25 +52,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(37.555744, 126.970431) //위도 경도
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(36.012588, 129.326288) //위도 경도
+                ,17
         ));
-
-        CameraUpdate zoom=CameraUpdateFactory.zoomTo(15);
-        googleMap.animateCamera(zoom);
+        //googleMap.getUiSettings().setAllGesturesEnabled(false);
+        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010521, 129.323859), new LatLng(36.013667, 129.328403)));
+        //googleMap.setMinZoomPreference(17);
 
         MarkerOptions marker=new MarkerOptions();
-        marker.position(new LatLng(37.555744, 126.970431))
-                .title("서울역")
-                .snippet("Seoul Station");
+        marker.position(new LatLng(36.012588, 129.326288))
+                .title("지곡로")
+                .snippet("Jigok MainRoad");
         googleMap.addMarker(marker).showInfoWindow();
+
+        final MarkerOptions marker1=new MarkerOptions();
+        marker1.position(new LatLng(36.012839, 129.325154))
+                .title("도서관")
+                .snippet("이동하려면 클릭")
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.chungam));;
+        googleMap.addMarker(marker1).showInfoWindow();
 
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener(){
             @Override
-            public boolean onMarkerClick(Marker marker) {
+            public boolean onMarkerClick(Marker markertemp) {
                 Toast.makeText(getApplicationContext(),
-                        marker.getTitle() + "클릭했음"
+                        markertemp.getTitle() + "클릭했음"
                         , Toast.LENGTH_SHORT).show();
+
+                if(markertemp.getTitle().equals(marker1.getTitle())) {
+                    Intent intent = new Intent(getApplicationContext(), MapsActivityLibrary.class);
+                    startActivity(intent);
+                }
+
                 return false;
             }
         });
@@ -87,7 +101,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
 
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+/**
+ * ATTENTION: This was auto-generated to implement the App Indexing API.
+ * See https://g.co/AppIndexing/AndroidStudio for more information.
+ */
