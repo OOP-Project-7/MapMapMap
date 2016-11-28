@@ -2,6 +2,8 @@ package com.example.s535.mapmapmap;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -216,6 +218,14 @@ public class MapsActivity1 extends FragmentActivity implements OnMapReadyCallbac
         });
     }
 
+    public Bitmap bitmapSizeByScall(int ID, float scall_zero_to_one_f) {
+        Bitmap bitmapIn = BitmapFactory.decodeResource(getResources(), ID);
+        Bitmap bitmapOut = Bitmap.createScaledBitmap(bitmapIn,
+                Math.round(bitmapIn.getWidth() * scall_zero_to_one_f),
+                Math.round(bitmapIn.getHeight() * scall_zero_to_one_f), false);
+        return bitmapOut;
+    }
+
     public void drawPlayers(List<Player> PlayerList, final GoogleMap googleMap)
     {
         MarkerOptions marker=new MarkerOptions();
@@ -229,12 +239,12 @@ public class MapsActivity1 extends FragmentActivity implements OnMapReadyCallbac
                         case 1:
                             // case에 따라 marker찍어주기
                             marker.position(new LatLng(PlayerList.get(i).getLat(), PlayerList.get(i).getLng()))
-                                    .icon(BitmapDescriptorFactory.fromResource(bear_black));
+                                    .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_black, (float)0.3)));
                             googleMap.addMarker(marker).showInfoWindow();
                             break;
                         case 2:
                             marker.position(new LatLng(PlayerList.get(i).getLat(), PlayerList.get(i).getLng()))
-                                    .icon(BitmapDescriptorFactory.fromResource(bear_blue));
+                                    .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_blue, (float)0.3)));
                             googleMap.addMarker(marker).showInfoWindow();
                             break;
                         default:

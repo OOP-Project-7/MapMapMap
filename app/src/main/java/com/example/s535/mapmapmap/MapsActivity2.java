@@ -57,8 +57,8 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
                 ,17
         ));
         //googleMap.getUiSettings().setAllGesturesEnabled(false);
-        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010521, 129.323859), new LatLng(36.013667, 129.328403)));
-        //googleMap.setMinZoomPreference(17);
+        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010921 ,129.325962), new LatLng(36.012554, 129.328148)));
+        googleMap.setMinZoomPreference(17);
 
         MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.012588, 129.326288))

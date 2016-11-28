@@ -12,6 +12,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -52,9 +53,9 @@ public class MapsActivity4 extends FragmentActivity implements OnMapReadyCallbac
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(
                 new LatLng(36.021738, 129.323129) //위도 경도
         ));
-        googleMap.getUiSettings().setAllGesturesEnabled(false);
-        CameraUpdate zoom=CameraUpdateFactory.zoomTo(16);
-        googleMap.animateCamera(zoom);
+
+        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.019800, 129.315200), new LatLng(36.024157, 129.323000)));
+        googleMap.setMinZoomPreference(17);
 
         MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.021738, 129.323129))

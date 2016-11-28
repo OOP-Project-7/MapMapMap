@@ -12,6 +12,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -53,8 +54,10 @@ public class MapsActivity3 extends FragmentActivity implements OnMapReadyCallbac
                 new LatLng(36.016393, 129.322329) //위도 경도
         ));
         //googleMap.getUiSettings().setAllGesturesEnabled(false);
-        CameraUpdate zoom=CameraUpdateFactory.zoomTo(17);
-        googleMap.animateCamera(zoom);
+
+        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.016193, 129.319499), new LatLng(36.016739, 129.324513)));
+        googleMap.setMinZoomPreference(17);
+
 
         MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.016393, 129.322329))
