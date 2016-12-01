@@ -1,6 +1,7 @@
 package com.example.s535.mapmapmap;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -11,8 +12,18 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.content.Intent;
-import com.firebase.client.Firebase;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
+
+;
 
 
 /**
@@ -47,22 +58,53 @@ public class SettingActivity extends Activity implements View.OnClickListener{
     private String[] foot_color;
     private String[] tag_type;
     private String Email;
-    private String Password;
+    private List<User> infoList;
 
-    private Firebase mRef1;
-    private Firebase mRef2;
+    private DatabaseReference mRef;
+
+    //은영추가
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    //은영추가
+
+    private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day) {
+        User user = new User(foot_type, foot_color, tag_type, year, month, day);
+
+        mRef.child(userID).child("foot_type").setValue(user.foot_type);
+        mRef.child(userID).child("foot_color").setValue(user.foot_color);
+        mRef.child(userID).child("tag_type").setValue(user.tag_type);
+        mRef.child(userID).child("year").setValue(user.year);
+        mRef.child(userID).child("month").setValue(user.month);
+        mRef.child(userID).child("day").setValue(user.day);
+    }
 
     protected void onCreate(Bundle savedInstanceState){
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-        Firebase.setAndroidContext(this);
-        mRef1 = new Firebase("https://mapmapmap-19686.firebaseio.com");
-        mRef2 = new Firebase("https://mapmapmap-a47d0.firebaseio.com/");
+        infoList = new ArrayList<User>();
+
+        //Firebase.setAndroidContext(this);
+        mRef = FirebaseDatabase.getInstance().getReference("Users");
+
+        //은영추가
+        mAuth = FirebaseAuth.getInstance();
+        //mAuthListener = new FirebaseAuth.AuthStateListener() {
+            /*@Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                if(firebaseAuth.getCurrentUser()==null){
+                    Intent loginIntent = new Intent(SettingActivity.this, LoginActivity.class);
+                    loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(loginIntent);
+                }
+            }
+        };*/
+        //은영추가
+
 
         Intent intent=getIntent();
-        Email=intent.getStringExtra("Email");
-        Password=intent.getStringExtra("Password");
+        Email = intent.getStringExtra("Email");
 
         yearSpinner = (Spinner)findViewById(R.id.spinner_year);
         ArrayAdapter yearAdapter = ArrayAdapter.createFromResource(this, R.array.date_year, android.R.layout.simple_spinner_dropdown_item);
@@ -172,57 +214,55 @@ public class SettingActivity extends Activity implements View.OnClickListener{
         }
     }
 
-    public void onClick(View v)
-    {
-        switch(v.getId())
-        {
+    public void onClick(View v) {
+        switch (v.getId()) {
             case R.id.character_left:
-                type=type-1;
-                if(type<0)
-                    type=type+3;
+                type = type - 1;
+                if (type < 0)
+                    type = type + 3;
                 textType.setText(foot_type[type]);
                 renewCharacter();
                 break;
             case R.id.character_right:
-                type=type+1;
-                if(type>2)
-                    type=type-3;
+                type = type + 1;
+                if (type > 2)
+                    type = type - 3;
                 textType.setText(foot_type[type]);
                 renewCharacter();
                 break;
             case R.id.color_left:
-                color=color-1;
-                if(color<0)
-                    color=color+3;
+                color = color - 1;
+                if (color < 0)
+                    color = color + 3;
                 textColor.setText(foot_color[color]);
                 renewCharacter();
                 break;
             case R.id.color_right:
-                color=color+1;
-                if(color>2)
-                    color=color-3;
+                color = color + 1;
+                if (color > 2)
+                    color = color - 3;
                 textColor.setText(foot_color[color]);
                 renewCharacter();
                 break;
             case R.id.tag_left:
-                tag=tag-1;
-                if(tag<0)
-                    tag=tag+3;
+                tag = tag - 1;
+                if (tag < 0)
+                    tag = tag + 3;
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.tag_right:
-                tag=tag+1;
-                if(tag>2)
-                    tag=tag-3;
+                tag = tag + 1;
+                if (tag > 2)
+                    tag = tag - 3;
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.init_setting:
-                color=0;
-                type=0;
-                tag=0;
-                birthday_year=1990;
-                birthday_month=1;
-                birthday_day=1;
+                color = 0;
+                type = 0;
+                tag = 0;
+                birthday_year = 1990;
+                birthday_month = 1;
+                birthday_day = 1;
                 yearSpinner.setSelection(0);
                 monthSpinner.setSelection(0);
                 daySpinner.setSelection(0);
@@ -237,23 +277,6 @@ public class SettingActivity extends Activity implements View.OnClickListener{
                 break;
             case R.id.confirm_setting:
 
-                class User {
-                    public String foot_type;
-                    public String foot_color;
-                    public String tag_type;
-                    public String year;
-                    public String month;
-                    public String day;
-
-                    public User(String foot_type, String foot_color, String tag_type, String year, String month, String day) {
-                        this.foot_type = foot_type;
-                        this.foot_color = foot_color;
-                        this.tag_type = tag_type;
-                        this.year = year;
-                        this.month = month;
-                        this.day = day;
-                    }
-                }
                 String foot_type = textType.getText().toString();
                 String foot_color = textColor.getText().toString();
                 String tag_type = textTag.getText().toString();
@@ -261,14 +284,43 @@ public class SettingActivity extends Activity implements View.OnClickListener{
                 String month = Integer.toString(birthday_month);
                 String day = Integer.toString(birthday_day);
 
-                Firebase childRef1 = mRef1.child("Users");
-                Firebase childRef2 = mRef2.child("Users");
-                childRef1.push().setValue(new User(foot_type, foot_color, tag_type, year, month, day));
-                childRef2.push().setValue(new User(foot_type, foot_color, tag_type, year, month, day));
+                //은영추가
+                String user_id = mAuth.getCurrentUser().getUid();
+                //은영추가
+
+                writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day);
+
                 Intent intent = new Intent(getApplicationContext(), SubActivity1.class);
                 startActivity(intent);
-                break;
 
+                break;
         }
+        mRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
+                    User user = postSnapshot.getValue(User.class);
+                    infoList.add(user);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
+
+/*    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }*/
 }

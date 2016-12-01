@@ -12,6 +12,7 @@ public class User {
     public String month;
     public String day;
 
+    public User() {}
     public User(String foot_type, String foot_color, String tag_type, String year, String month, String day) {
         this.foot_type = foot_type;
         this.foot_color = foot_color;

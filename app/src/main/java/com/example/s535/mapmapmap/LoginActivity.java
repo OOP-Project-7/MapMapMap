@@ -6,13 +6,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -21,221 +19,226 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import static android.R.attr.name;
+import java.util.regex.Pattern;
 
-/**
- *CreatedbyEunyoungon2016-10-30.
- */
+public class LoginActivity extends Activity implements
+        View.OnClickListener {
 
-public class LoginActivity extends Activity {
-        //로그인작성
-        private EditText mEmailInput, mPasswordInput;
-        private Button mLoginButton, mRegisterButton, mCancelButton;
-        private FirebaseAuth auth;
+        private static final String TAG = "EmailPassword";
+
+        private EditText mEmailField;
+        private EditText mPasswordField;
+
+        // [START declare_auth]
+        private FirebaseAuth mAuth;
+        // [END declare_auth]
+
+        // [START declare_auth_listener]
         private FirebaseAuth.AuthStateListener mAuthListener;
+        // [END declare_auth_listener]
+
+        private ProgressDialog mProgress;
+        //  private DatabaseReference mDatabase;
 
         @Override
-        protected void onCreate(Bundle savedInstanceState) {
+        public void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
-
-                auth = FirebaseAuth.getInstance();
-
                 setContentView(R.layout.activity_login);
 
-                mEmailInput = (EditText) findViewById(R.id.emailInput);
-                mPasswordInput = (EditText) findViewById(R.id.passwordInput);
-                mLoginButton = (Button) findViewById(R.id.loginButton);
-                mRegisterButton = (Button) findViewById(R.id.registerButton);
-                mCancelButton = (Button) findViewById(R.id.cancelButton);
+                mProgress = new ProgressDialog(this);
+                //mDatabase = FirebaseDatabase.getInstance().getReference().child("Users");
 
-                //어플 완전 종료
-                mCancelButton.setOnClickListener(new Button.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                                moveTaskToBack(true);
-                                finish();
-                                android.os.Process.killProcess(android.os.Process.myPid());
-                        }
-                });
-                //사용자 등록
-                mRegisterButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                                startRegister();
-                        }
-                });
-                //로그인 시도
-                mLoginButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                                startSigning();
-                        }
-                });
-        }
+                // Views
+                mEmailField = (EditText) findViewById(R.id.emailInput);
+                mPasswordField = (EditText) findViewById(R.id.passwordInput);
 
-        //사용자 등록
-        private void startRegister() {
+                // Buttons
+                findViewById(R.id.loginButton).setOnClickListener(this);
+                findViewById(R.id.registerButton).setOnClickListener(this);
+                findViewById(R.id.cancelButton).setOnClickListener(this);
 
-                String email = mEmailInput.getText().toString().trim();
-                String password = mPasswordInput.getText().toString().trim();
+                // [START initialize_auth]
+                mAuth = FirebaseAuth.getInstance();
+                // [END initialize_auth]
 
-                if (!validateForm()) {
-                        return;
-                }
-
-                auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                                Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
-                                if (!task.isSuccessful()) {
-                                        Toast.makeText(LoginActivity.this, "createUser failed" + task.getException(),
-                                                Toast.LENGTH_SHORT).show();
-                                }
-                        }
-                });
-/*                mAuthListener = new FirebaseAuth.AuthStateListener() {
+                // [START auth_state_listener]
+                mAuthListener = new FirebaseAuth.AuthStateListener() {
                         @Override
                         public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                                 FirebaseUser user = firebaseAuth.getCurrentUser();
-                                String email = mEmailInput.getText().toString().trim();
-                                String password = mPasswordInput.getText().toString().trim();
 
                                 if (user != null) {
-                                        //이메일 확인을 안했다면
-                                        if (!user.isEmailVerified()) {
-                                                //이메일 발송
-                                                user.sendEmailVerification();
-                                                Toast.makeText(LoginActivity.this, "Check your email first...", Toast.LENGTH_LONG).show();
-                                        }
-                                        //이메일을 확인한 사람이면
-                                        else {
-                                                //계정 만들기
-                                                auth.createUserWithEmailAndPassword(email, password)
-                                                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                                                                @Override
-                                                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                                                        Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
-                                                                        // If sign in fails, display a message to the user. If sign in succeeds
-                                                                        // the auth state listener will be notified and logic to handle the
-                                                                        // signed in user can be handled in the listener.
-                                                                        if (!task.isSuccessful()) {
-                                                                                Toast.makeText(LoginActivity.this, "createUser failed." + task.getException(),
-                                                                                        Toast.LENGTH_SHORT).show();
-                                                                        }
-                                                                }
-                                                        });
-                                        }
+                                        // User is signed in
+                                        Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+
                                 } else {
                                         // User is signed out
+                                        Log.d(TAG, "onAuthStateChanged:signed_out");
                                 }
                         }
-                };*/
+                };
+                // [END auth_state_listener]
         }
 
-        //로그인 진행
-        private void startSigning() {
-                String email = mEmailInput.getText().toString();
-                String password = mPasswordInput.getText().toString();
+        // [START on_start_add_listener]
+        @Override
+        public void onStart() {
+                super.onStart();
+                mAuth.addAuthStateListener(mAuthListener);
+        }
+        // [END on_start_add_listener]
 
+        // [START on_stop_remove_listener]
+        @Override
+        public void onStop() {
+                super.onStop();
+                if (mAuthListener != null) {
+                        mAuth.removeAuthStateListener(mAuthListener);
+                }
+        }
+        // [END on_stop_remove_listener]
+
+        private void createAccount(String email, String password) {
+                mProgress.setMessage("Checking...");
+                mProgress.show();
+                Log.d(TAG, "createAccount:" + email);
                 if (!validateForm()) {
                         return;
                 }
-                auth.signInWithEmailAndPassword(email,password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                                FirebaseUser user = auth.getCurrentUser();
 
-                                //이메일을 확인하지 않았으면
-                                /*if (!user.isEmailVerified()) {
-                                        Toast.makeText(LoginActivity.this, "Check your email first...", Toast.LENGTH_LONG).show();
-                                } else {//확인했으면*/
-                                if (!task.isSuccessful()) {
-                                        // there was an error
-                                        Toast.makeText(LoginActivity.this, "Sign In Problem", Toast.LENGTH_LONG).show();
+                // [START create_user_with_email]
+                mAuth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                                //추가한부분
+
+                                //추가한부분끝
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
+                                        // If sign in fails, display a message to the user. If sign in succeeds
+                                        // the auth state listener will be notified and logic to handle the
+                                        // signed in user can be handled in the listener.
+
+                                        if (!task.isSuccessful()) {
+                                                mProgress.dismiss();
+                                                Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+                                        }
+                                        else{
+                                                mProgress.dismiss();
+                                                Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+                                        }
+
                                 }
-                                //로그인이 성공적으로 진행되면
-                                else {
-                                        Toast.makeText(LoginActivity.this, "You are in =)", Toast.LENGTH_LONG).show();
-                                        Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                }
+                        });
+                // [END create_user_with_email]
+        }
 
-                                //}
-                        }
-                });
-/*                mAuthListener = new FirebaseAuth.AuthStateListener() {
-                        @Override
-                        public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                                FirebaseUser user = firebaseAuth.getCurrentUser();
+        private void signIn(String email, String password) {
+                mProgress.setMessage("Sign in...");
+                mProgress.show();
+                Log.d(TAG, "signIn:" + email);
+                if (!validateForm()) {
+                        return;
+                }
 
-                                String email = mEmailInput.getText().toString();
-                                String password = mPasswordInput.getText().toString();
-                                if (user != null) {
-                                        auth.signInWithEmailAndPassword(email, password)
-                                                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                                                        @Override
-                                                        public void onComplete(@NonNull Task<AuthResult> task) {
-                                                                FirebaseUser user = auth.getCurrentUser();
-
-                                                                //이메일을 확인하지 않았으면
-                                                                if (!user.isEmailVerified()) {
-                                                                        Toast.makeText(LoginActivity.this, "Check your email first...", Toast.LENGTH_LONG).show();
-                                                                } else {//확인했으면
-                                                                        if (!task.isSuccessful()) {
-                                                                                // there was an error
-                                                                                Toast.makeText(LoginActivity.this, "Sign In Problem", Toast.LENGTH_LONG).show();
-                                                                        }
-                                                                        //로그인이 성공적으로 진행되면
-                                                                        else {
-                                                                                Toast.makeText(LoginActivity.this, "You are in =)", Toast.LENGTH_LONG).show();
-                                                                        }
-                                                                        Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
-                                                                        startActivity(intent);
-                                                                        finish();
-                                                                }
-
+                // [START sign_in_with_email]
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                        //추가한부분2
+                                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                        if (user != null) {
+                                                if(!user.isEmailVerified()){
+                                                        user.sendEmailVerification();
+                                                        mProgress.dismiss();
+                                                        Toast.makeText(LoginActivity.this,"Check your email first...",Toast.LENGTH_LONG).show();
+                                                }
+                                                else{
+                                                        Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
+                                                        // If sign in fails, display a message to the user. If sign in succeeds
+                                                        // the auth state listener will be notified and logic to handle the
+                                                        // signed in user can be handled in the listener.
+                                                        if (!task.isSuccessful()) {
+                                                                mProgress.dismiss();
+                                                                Log.w(TAG, "signInWithEmail:failed", task.getException());
+                                                                Toast.makeText(LoginActivity.this, "Sign In Problem",
+                                                                        Toast.LENGTH_SHORT).show();
                                                         }
+                                                        else {
+                                                                mProgress.dismiss();
+                                                                Toast.makeText(LoginActivity.this, "You are in =)", Toast.LENGTH_LONG).show();
+                                                                Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
+                                                                startActivity(intent);
+                                                                finish();
+                                                        }
+                                                }
+                                                // User is signed in
+                                        } else {
+                                                // No user is signed in
+                                        }
+                                        //추가끝2
 
-
-                                                });
                                 }
-                        }
-                };*/
+                        });
+                // [END sign_in_with_email]
+        }
 
+        private void signOut() {
+                mAuth.signOut();
         }
 
         private boolean validateForm() {
                 boolean valid = true;
-                String email = mEmailInput.getText().toString();
-                String password = mPasswordInput.getText().toString();
+                String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@" + Pattern.quote("postech.ac.kr") + "$";
 
-                //이메일 칸이랑 패스워드 칸 비워둔 경우
-                if (TextUtils.isEmpty(email) && TextUtils.isEmpty(password)) {
-                        Toast.makeText(getApplicationContext(), "Enter email address and password!", Toast.LENGTH_SHORT).show();
+                String email = mEmailField.getText().toString();
+                if (TextUtils.isEmpty(email)) {
+                        mEmailField.setError("Required.");
                         valid = false;
-                        return valid;
+                } else {
+                        //추가시작
+                        if(email.contains("postech.ac.kr")){
+                                mEmailField.setError(null);
+                        }
+                        else{
+                                Toast.makeText(getApplicationContext(), "Use yourPovisID@postech.ac.kr", Toast.LENGTH_SHORT).show();
+                                mEmailField.setError("Required.");
+                                valid = false;
+                        }
+                        //추가끝
+                        //mEmailField.setError(null);
                 }
-                //이메일 칸 비워둔 경우
-                else if (TextUtils.isEmpty(email)) {
-                        Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
+
+                String password = mPasswordField.getText().toString();
+
+                if (TextUtils.isEmpty(password)) {
+                        mPasswordField.setError("Required.");
                         valid = false;
-                        return valid;
-                }
-                //패스워드 칸 비워둔 경우
-                if (!(TextUtils.isEmpty(email) || TextUtils.isEmpty(password))) {
-                        //비밀 번호가 너무 짧은 경우
+                } else {
                         if (password.length() < 6) {
+                                mPasswordField.setError("Required.");
                                 Toast.makeText(getApplicationContext(), "Password is too short, enter minimum 6 characters!", Toast.LENGTH_SHORT).show();
                                 valid = false;
-                                return valid;
-                        } else
-                                return valid;
+                        } else {
+                                mPasswordField.setError(null);
+                        }
                 }
                 return valid;
         }
 
+        @Override
+        public void onClick(View v) {
+                int i = v.getId();
+                if (i == R.id.registerButton) {
+                        createAccount(mEmailField.getText().toString(), mPasswordField.getText().toString());
+                } else if (i == R.id.loginButton) {
+                        signIn(mEmailField.getText().toString(), mPasswordField.getText().toString());
+                } else if (i == R.id.cancelButton) {
+                        signOut();
+                        moveTaskToBack(true);
+                        finish();
+                        android.os.Process.killProcess(android.os.Process.myPid());
+                }
+        }
 }

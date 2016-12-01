@@ -18,26 +18,21 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallback {
+import java.util.ArrayList;
+import java.util.List;
 
-    private GoogleMap mMap;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps2);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map2);
+                .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
 
@@ -60,6 +55,11 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010921 ,129.325962), new LatLng(36.012554, 129.328148)));
         googleMap.setMinZoomPreference(17);
 
+        List<Player> tempList=new ArrayList<Player>();
+        setList(tempList); //처음에 한번 리스트 생성
+        getPlayers(getList()); //서버로부터 받아서 리스트에 저장하는 함수
+        drawPlayers(getList(), googleMap); //지도에 그리는함수
+
         MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.012588, 129.326288))
                 .title("지곡로")
@@ -73,7 +73,7 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.chungam));;
         googleMap.addMarker(marker1).showInfoWindow();
 
-        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener(){
+        /*googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener(){
             @Override
             public boolean onMarkerClick(Marker markertemp) {
                 Toast.makeText(getApplicationContext(),
@@ -87,7 +87,8 @@ public class MapsActivity2 extends FragmentActivity implements OnMapReadyCallbac
 
                 return false;
             }
-        });
+        });*/
+        googleMap.setOnMarkerClickListener(this);
     }
 }
 
