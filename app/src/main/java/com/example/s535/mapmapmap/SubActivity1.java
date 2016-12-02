@@ -157,9 +157,11 @@ public class SubActivity1 extends AppCompatActivity{
                 int bx=(int)(xpercent*bitmap.getWidth());
                 int by=(int)(ypercent*bitmap.getHeight());
                 int transparency = ((bitmap.getPixel(bx,by) & 0xff000000) >> 24);
+                int cx=bx*2992/bitmap.getWidth();
+                int cy=by*5744/bitmap.getHeight();
                 if(transparency!=0)
                 {
-                    if(bx>200&&bx<2500&&by<1300)
+                    if(cx>200&&cx<2500&&cy<1300)
                     {
                         map1.setVisibility(View.INVISIBLE);
                         map2.setVisibility(View.INVISIBLE);
@@ -167,7 +169,7 @@ public class SubActivity1 extends AppCompatActivity{
                         map4.setVisibility(View.INVISIBLE);
                         map4.setVisibility(View.VISIBLE);
                     }
-                    if(bx>870&&bx<2500&&by>1300&&by<2500)
+                    if(cx>870&&cx<2500&&cy>1300&&cy<2500)
                     {
                         map1.setVisibility(View.INVISIBLE);
                         map2.setVisibility(View.INVISIBLE);
@@ -175,7 +177,7 @@ public class SubActivity1 extends AppCompatActivity{
                         map4.setVisibility(View.INVISIBLE);
                         map3.setVisibility(View.VISIBLE);
                     }
-                    if(bx>330&&bx<1700&&by>2500&&by<5400)
+                    if(cx>330&&cx<1700&&cy>2500&&cy<5400)
                     {
                         map1.setVisibility(View.INVISIBLE);
                         map2.setVisibility(View.INVISIBLE);
@@ -183,7 +185,7 @@ public class SubActivity1 extends AppCompatActivity{
                         map4.setVisibility(View.INVISIBLE);
                         map1.setVisibility(View.VISIBLE);
                     }
-                    if(bx>1800&&bx<2700&&by>2700&&by<5000)
+                    if(cx>1800&&cx<2700&&cy>2700&&cy<5000)
                     {
                         map1.setVisibility(View.INVISIBLE);
                         map2.setVisibility(View.INVISIBLE);
