@@ -98,46 +98,12 @@ public class LoginActivity extends Activity implements
         }
         // [END on_stop_remove_listener]
 
-        private void createAccount(String email, String password) {
-                mProgress.setMessage("Checking...");
-                mProgress.show();
-                Log.d(TAG, "createAccount:" + email);
-                if (!validateForm()) {
-                        return;
-                }
-
-                // [START create_user_with_email]
-                mAuth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                                //추가한부분
-
-                                //추가한부분끝
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                                        // If sign in fails, display a message to the user. If sign in succeeds
-                                        // the auth state listener will be notified and logic to handle the
-                                        // signed in user can be handled in the listener.
-
-                                        if (!task.isSuccessful()) {
-                                                mProgress.dismiss();
-                                                Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
-                                        }
-                                        else{
-                                                mProgress.dismiss();
-                                                Toast.makeText(LoginActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
-                                        }
-
-                                }
-                        });
-                // [END create_user_with_email]
-        }
-
         private void signIn(String email, String password) {
                 mProgress.setMessage("Sign in...");
                 mProgress.show();
                 Log.d(TAG, "signIn:" + email);
                 if (!validateForm()) {
+                        mProgress.dismiss();
                         return;
                 }
 
@@ -168,8 +134,6 @@ public class LoginActivity extends Activity implements
                                                         else {
                                                                 mProgress.dismiss();
                                                                 Toast.makeText(LoginActivity.this, "You are in =)", Toast.LENGTH_LONG).show();
-                                                                Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
-                                                                startActivity(intent);
                                                                 finish();
                                                         }
                                                 }
@@ -231,7 +195,8 @@ public class LoginActivity extends Activity implements
         public void onClick(View v) {
                 int i = v.getId();
                 if (i == R.id.registerButton) {
-                        createAccount(mEmailField.getText().toString(), mPasswordField.getText().toString());
+                        Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+                        startActivity(intent);
                 } else if (i == R.id.loginButton) {
                         signIn(mEmailField.getText().toString(), mPasswordField.getText().toString());
                 } else if (i == R.id.cancelButton) {

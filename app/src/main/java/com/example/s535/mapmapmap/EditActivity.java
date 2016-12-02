@@ -30,7 +30,7 @@ import java.util.List;
  * Created by Eunyoung on 2016-10-30.
  */
 
-public class SettingActivity extends Activity implements View.OnClickListener{
+public class EditActivity extends Activity implements View.OnClickListener{
     private int color=0;
     private int type=0;
     private int tag=0;
@@ -46,7 +46,9 @@ public class SettingActivity extends Activity implements View.OnClickListener{
     private ImageButton btn4;
     private ImageButton btn5;
     private ImageButton btn6;
-    private Button btn_register;
+    private Button btn_cancel;
+    private Button btn_confirm;
+    private Button btn_init;
     private ImageView Character;
     private TextView textType;
     private TextView textColor;
@@ -55,12 +57,14 @@ public class SettingActivity extends Activity implements View.OnClickListener{
     private String[] foot_type;
     private String[] foot_color;
     private String[] tag_type;
+    private String Email;
     private List<User> infoList;
 
     private DatabaseReference mRef;
 
     //은영추가
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     //은영추가
 
     private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day) {
@@ -77,15 +81,30 @@ public class SettingActivity extends Activity implements View.OnClickListener{
     protected void onCreate(Bundle savedInstanceState){
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting);
+        setContentView(R.layout.activity_edit);
 
         infoList = new ArrayList<User>();
 
+        //Firebase.setAndroidContext(this);
         mRef = FirebaseDatabase.getInstance().getReference("Users");
 
         //은영추가
         mAuth = FirebaseAuth.getInstance();
+        //mAuthListener = new FirebaseAuth.AuthStateListener() {
+            /*@Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                if(firebaseAuth.getCurrentUser()==null){
+                    Intent loginIntent = new Intent(SettingActivity.this, LoginActivity.class);
+                    loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(loginIntent);
+                }
+            }
+        };*/
         //은영추가
+
+
+        Intent intent=getIntent();
+        Email = intent.getStringExtra("Email");
 
         yearSpinner = (Spinner)findViewById(R.id.spinner_year);
         ArrayAdapter yearAdapter = ArrayAdapter.createFromResource(this, R.array.date_year, android.R.layout.simple_spinner_dropdown_item);
@@ -144,8 +163,12 @@ public class SettingActivity extends Activity implements View.OnClickListener{
         btn4.setOnClickListener(this);
         btn5.setOnClickListener(this);
         btn6.setOnClickListener(this);
-        btn_register=(Button)findViewById(R.id.registerButton);
-        btn_register.setOnClickListener(this);
+        btn_cancel=(Button)findViewById(R.id.cancel_setting);
+        btn_confirm=(Button)findViewById(R.id.confirm_setting);
+        btn_init=(Button)findViewById(R.id.init_setting);
+        btn_cancel.setOnClickListener(this);
+        btn_confirm.setOnClickListener(this);
+        btn_init.setOnClickListener(this);
         Character = (ImageView)findViewById(R.id.character_pic);
         textType =(TextView)findViewById(R.id.character_type);
         textColor=(TextView)findViewById(R.id.character_color);
@@ -233,7 +256,27 @@ public class SettingActivity extends Activity implements View.OnClickListener{
                     tag = tag - 3;
                 textTag.setText(tag_type[tag]);
                 break;
-            case R.id.registerButton:
+            case R.id.init_setting:
+                color = 0;
+                type = 0;
+                tag = 0;
+                birthday_year = 1990;
+                birthday_month = 1;
+                birthday_day = 1;
+                yearSpinner.setSelection(0);
+                monthSpinner.setSelection(0);
+                daySpinner.setSelection(0);
+                txt_profile.setText("");
+                textType.setText(foot_type[type]);
+                textColor.setText(foot_color[color]);
+                textTag.setText(tag_type[tag]);
+                renewCharacter();
+                break;
+            case R.id.cancel_setting:
+                finish();
+                break;
+            case R.id.confirm_setting:
+
                 String foot_type = textType.getText().toString();
                 String foot_color = textColor.getText().toString();
                 String tag_type = textTag.getText().toString();
@@ -247,15 +290,15 @@ public class SettingActivity extends Activity implements View.OnClickListener{
 
                 writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day);
 
-                this.finish();
+                Intent intent = new Intent(getApplicationContext(), SubActivity1.class);
+                startActivity(intent);
 
                 break;
         }
-
         mRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                for (DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
                     User user = postSnapshot.getValue(User.class);
                     infoList.add(user);
                 }
@@ -267,4 +310,17 @@ public class SettingActivity extends Activity implements View.OnClickListener{
             }
         });
     }
+
+/*    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }*/
 }
