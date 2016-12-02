@@ -14,6 +14,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -63,15 +64,19 @@ public class SettingActivity extends Activity implements View.OnClickListener{
     private FirebaseAuth mAuth;
     //은영추가
 
-    private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day) {
-        User user = new User(foot_type, foot_color, tag_type, year, month, day);
+    private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day, String statusmessage) {
+        User user = new User(userID, foot_type, foot_color, tag_type, year, month, day, statusmessage,"0","0");
 
-        mRef.child(userID).child("foot_type").setValue(user.foot_type);
-        mRef.child(userID).child("foot_color").setValue(user.foot_color);
-        mRef.child(userID).child("tag_type").setValue(user.tag_type);
-        mRef.child(userID).child("year").setValue(user.year);
-        mRef.child(userID).child("month").setValue(user.month);
-        mRef.child(userID).child("day").setValue(user.day);
+        mRef.child(userID).child("user_id").setValue(userID);
+        mRef.child(userID).child("foot_type").setValue(foot_type);
+        mRef.child(userID).child("foot_color").setValue(foot_color);
+        mRef.child(userID).child("tag_type").setValue(tag_type);
+        mRef.child(userID).child("year").setValue(year);
+        mRef.child(userID).child("month").setValue(month);
+        mRef.child(userID).child("day").setValue(day);
+        mRef.child(userID).child("statusmessage").setValue(statusmessage);
+        mRef.child(userID).child("longitude").setValue(Double.toString(user.getLongitude()));
+        mRef.child(userID).child("latitude").setValue(Double.toString(user.getLatitude()));
     }
 
     protected void onCreate(Bundle savedInstanceState){
@@ -85,6 +90,7 @@ public class SettingActivity extends Activity implements View.OnClickListener{
 
         //은영추가
         mAuth = FirebaseAuth.getInstance();
+
         //은영추가
 
         yearSpinner = (Spinner)findViewById(R.id.spinner_year);
@@ -234,37 +240,27 @@ public class SettingActivity extends Activity implements View.OnClickListener{
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.registerButton:
-                String foot_type = textType.getText().toString();
-                String foot_color = textColor.getText().toString();
-                String tag_type = textTag.getText().toString();
+                String foot_type = String.valueOf(type);
+                String foot_color = String.valueOf(color);
+                String tag_type = String.valueOf(tag);
                 String year = Integer.toString(birthday_year);
                 String month = Integer.toString(birthday_month);
                 String day = Integer.toString(birthday_day);
+                String statusmessage = txt_profile.getText().toString();
 
                 //은영추가
                 String user_id = mAuth.getCurrentUser().getUid();
                 //은영추가
 
-                writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day);
 
-                this.finish();
+                writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day, statusmessage);
+
+                finish();
 
                 break;
         }
 
-        mRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    User user = postSnapshot.getValue(User.class);
-                    infoList.add(user);
-                }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
     }
 }

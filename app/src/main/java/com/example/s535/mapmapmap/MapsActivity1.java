@@ -2,6 +2,7 @@ package com.example.s535.mapmapmap;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -9,9 +10,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
@@ -21,7 +25,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
+import android.Manifest;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
@@ -39,6 +43,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 import static com.example.s535.mapmapmap.R.mipmap.bear_black;
@@ -46,11 +52,20 @@ import static com.example.s535.mapmapmap.R.mipmap.bear_blue;
 
 public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
+    private ToggleButton Bar_GPSToggle;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+
+
+        Bar_GPSToggle = (ToggleButton) findViewById(R.id.Bar_GPSToggle);
+        Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
 
         mapFragment.getMapAsync(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -60,6 +75,13 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
 
+        final TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                drawPlayers(getList(), googleMap);
+            }
+        };
+
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(36.011791, 129.321883) //위도 경도
                 , 17
@@ -68,11 +90,8 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010070, 129.319867), new LatLng(36.012591, 129.322485)));
         googleMap.setMinZoomPreference(17);
-        List<Player> tempList=new ArrayList<Player>();
-        setList(tempList); //처음에 한번 리스트 생성
-        getPlayers(getList()); //서버로부터 받아서 리스트에 저장하는 함수
         MarkerOptions marker=new MarkerOptions();
-        drawPlayers(getList(), googleMap); //지도에 그리는함수
+        drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
 
         //지도상에 다 표지했다
 
@@ -91,6 +110,24 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                     public void onNothingSelected(AdapterView<?> parent){
                     }
                 }*/
+
+        Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (Bar_GPSToggle.isChecked()) {
+                        Bar_GPSToggle.setBackgroundResource(R.mipmap.refreshbutton);
+                        Timer timer = new Timer();
+                        timer.schedule(timerTask, 1000, 1000);
+                        //지도에 그리는함수. 나중에 실행시켜보고 수정필요??
+                    } else {
+                        Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+                    }
+                } catch (SecurityException ex) {
+                }
+            }
+        });
+
         googleMap.setOnMarkerClickListener(
                 new GoogleMap.OnMarkerClickListener() {
                     @Override
@@ -126,7 +163,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                         return false;
                     }
                 });
+
         //googleMap.setOnMarkerClickListener(this);
     }
 }
-

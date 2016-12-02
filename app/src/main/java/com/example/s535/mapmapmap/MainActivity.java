@@ -26,4 +26,7 @@ public class MainActivity extends AppCompatActivity {
         };
         handler.sendEmptyMessageDelayed(0,1000);
     }
+
+    @Override
+    public void onBackPressed() {}
 }

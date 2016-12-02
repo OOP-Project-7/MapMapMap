@@ -21,8 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.regex.Pattern;
 
-public class LoginActivity extends Activity implements
-        View.OnClickListener {
+public class LoginActivity extends Activity implements View.OnClickListener {
 
         private static final String TAG = "EmailPassword";
 
@@ -205,5 +204,13 @@ public class LoginActivity extends Activity implements
                         finish();
                         android.os.Process.killProcess(android.os.Process.myPid());
                 }
+        }
+
+        @Override
+        public void onBackPressed() {
+                signOut();
+                moveTaskToBack(true);
+                finish();
+                android.os.Process.killProcess(android.os.Process.myPid());
         }
 }

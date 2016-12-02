@@ -2,6 +2,7 @@ package com.example.s535.mapmapmap;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -10,17 +11,22 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.Manifest;
 
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -37,6 +43,13 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,80 +61,141 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
 
     private GoogleMap mMap;
     private GoogleApiClient client;
-    private List<Player> map1PlayerList;
+    private ArrayList<User> mapPlayerList;
     /*status bar를 위한 변수선언(자기 자신에 대한 정보)*/
+    private DatabaseReference mRef;
+    private FirebaseAuth mAuth;
+
+    private String UserId;
     private String UserProfile;
     private int UserTag;
     private double lat, lng;
     private TextView Bar_Profile, Bar_Tag;
-    private ToggleButton Bar_GPSToggle;
     private ImageButton Bar_Setting;
     private LocationManager lm;
+    private LocationListener mLocationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //여기에서 사용자들 정보를 서버에서 다 받아다가 리스트에 저장
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        /*상태바를 위한 onCreate함수 구현*/
-        {
-            Bar_Profile = (TextView) findViewById(R.id.Bar_Profile);
-            Bar_Tag = (TextView) findViewById(R.id.Bar_Tag);
-            Bar_GPSToggle = (ToggleButton) findViewById(R.id.Bar_GPSToggle);
-            Bar_Setting = (ImageButton) findViewById(R.id.Bar_Setting);
-            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            // only for gingerbread and newer versions
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+            //map의 oncreate에서 내 GPS좌표 얻어다가 서버에 보내서 내 좌표 초기화시켜줘야한다
+        }
 
-            /*getIntent로 정보 받아와야함*/
-            UserProfile = "상메";
-            UserTag = 0;
-            Bar_Profile.setText(UserProfile);
-            Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
-            Bar_Setting.setBackgroundResource(R.mipmap.settingbutton);
-            switch (UserTag) {
-                case 0:
-                    Bar_Tag.setText("A");
-                    break;
-                case 1:
-                    Bar_Tag.setText("B");
-                    break;
-                case 2:
-                    Bar_Tag.setText("C");
-                    break;
+        /*여기에서 사용자들 정보를 서버에서 다 받아다가 리스트에 저장*/
+        mapPlayerList = new ArrayList<User>(); //mapPlayerList공간 동적할당
+
+        mRef = FirebaseDatabase.getInstance().getReference("Users");
+        mAuth = FirebaseAuth.getInstance();
+
+
+        mRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mapPlayerList.clear();
+                for (DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
+
+                    String user_id = (String) postSnapshot.child("user_id").getValue();
+                    String foot_type = (String) postSnapshot.child("foot_type").getValue();
+                    String foot_color = (String) postSnapshot.child("foot_color").getValue();
+                    String tag_type = (String) postSnapshot.child("tag_type").getValue();
+                    String year = (String) postSnapshot.child("year").getValue();
+                    String month = (String) postSnapshot.child("month").getValue();
+                    String day = (String) postSnapshot.child("day").getValue();
+                    String statusmessage = (String) postSnapshot.child("statusmessage").getValue();
+                    String longitude = (String) postSnapshot.child("longitude").getValue();
+                    String latitude = (String) postSnapshot.child("latitude").getValue();
+
+                    User user = new User(user_id, foot_type, foot_color, tag_type, year, month, day, statusmessage, latitude, longitude);
+
+                    mapPlayerList.add(user);
+                }
             }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        UserId=mAuth.getCurrentUser().getUid(); //내 아이디를 참조
+
+        /*상태바 구현*/
+        Bar_Profile = (TextView) findViewById(R.id.Bar_Profile);
+        Bar_Tag = (TextView) findViewById(R.id.Bar_Tag);
+        Bar_Setting = (ImageButton) findViewById(R.id.Bar_Setting);
+
+        UserProfile = "상메";
+        UserTag = 0;
+        Bar_Profile.setText(UserProfile);
+
+        Bar_Setting.setBackgroundResource(R.mipmap.settingbutton);
+        switch (UserTag) {
+            case 0:
+                Bar_Tag.setText("A");
+                break;
+            case 1:
+                Bar_Tag.setText("B");
+                break;
+            case 2:
+                Bar_Tag.setText("C");
+                break;
+        }
 
         /*Bar_Loc설정*/
 
-            Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        if (Bar_GPSToggle.isChecked()) {
-                            Bar_GPSToggle.setBackgroundResource(R.mipmap.refreshbutton);
-                            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 1, mLocationListener);
-                            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1, mLocationListener);
-                        } else {
-                            Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
-                            lm.removeUpdates(mLocationListener);
-                        }
-                    } catch (SecurityException ex) {
-                    }
-                }
-            });
+        Bar_Setting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-            Bar_Setting.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(MapsActivity.this, SettingActivity.class);
                 /*putExtra 사용자 정보*/
-                    startActivity(intent);
-                }
-            });
+                Intent it = new Intent(MapsActivity.this, EditActivity.class);
+                it.putExtra("users", mapPlayerList);
+                startActivity(it);
+            }
+        });
+
+        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        mLocationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                //여기서 위치값이 갱신되면 이벤트가 발생한다.
+                //값은 Location 형태로 리턴되며 좌표 출력 방법은 다음과 같다.
+                Toast.makeText(getApplicationContext(), "로케이션체인지", Toast.LENGTH_SHORT).show();
+                lat = location.getLatitude();     //위도
+                lng = location.getLongitude();    //경도
+                editUserGps(UserId, Double.toString(lat), Double.toString(lng));
+                //lat과 lng서버로 보내기
+            }
+            public void onProviderDisabled(String provider) {
+            }
+            public void onProviderEnabled(String provider) {
+            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+        };
+
+        try {
+
+
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    1000, 0, mLocationListener);
+            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    1000, 0, mLocationListener);
         }
+        catch (SecurityException ex){
+            Toast.makeText(getApplicationContext(), "위치서비스를 켜주세요!!!", Toast.LENGTH_SHORT).show();
+        }
+    }
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-
-
+    private void editUserGps(String userID, String latitude, String longitude){
+        mRef.child(userID).child("latitude").setValue(latitude);
+        mRef.child(userID).child("longitude").setValue(longitude);
     }
 
     public Bitmap bitmapSizeByScall(int ID, float scall_zero_to_one_f) {
@@ -132,90 +206,115 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return bitmapOut;
     }
 
-    public void drawPlayers(List<Player> PlayerList, final GoogleMap googleMap) {
+    public void drawPlayers(List<User> UserList,  final GoogleMap googleMap) {
         MarkerOptions marker = new MarkerOptions();
-        for (int i = 0; i < PlayerList.size(); i++) {
-            switch (PlayerList.get(i).getfootType()) {
-                case 1:
-                    switch (PlayerList.get(i).getfootColor()) {
-                        case 1:
-                            // case에 따라 marker찍어주기
-                            marker.position(new LatLng(PlayerList.get(i).getLat(), PlayerList.get(i).getLng()))
-                                    .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_black, (float) 0.3)));
-                            googleMap.addMarker(marker).showInfoWindow();
-                            break;
-                        case 2:
-                            marker.position(new LatLng(PlayerList.get(i).getLat(), PlayerList.get(i).getLng()))
-                                    .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_blue, (float) 0.3)));
-                            googleMap.addMarker(marker).showInfoWindow();
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
+        for (int i = 0; i < UserList.size(); i++) {
+            if (UserList.get(i).getLatitude() != 0) {
+                switch (UserList.get(i).getFootType()) {
+                    case 0:
+                        switch (UserList.get(i).getFootColor()) {
+                            case 0:
+                                // case에 따라 marker찍어주기
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_black, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 1:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_red, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 2:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_blue, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 1:
+                        switch (UserList.get(i).getFootColor()) {
+                            case 0:
+                                // case에 따라 marker찍어주기
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_black, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 1:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_red, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 2:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_blue, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case 2:
+                        switch (UserList.get(i).getFootColor()) {
+                            case 0:
+                                // case에 따라 marker찍어주기
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_black, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 1:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_red, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            case 2:
+                                marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_red, (float) 0.3)));
+                                googleMap.addMarker(marker).showInfoWindow();
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
         //지도상에 다 표지했다
     }
 
-    public void getPlayers(List<Player> PlayerList) {
-        PlayerList.add(new Player("123", "hello", 36.012096, 129.322351, 1, 1));
-        PlayerList.add(new Player("124", "helloo", 36.011437, 129.321417, 1, 2));
 
-        //여기에 서버로부터 사용자정보 다 받아오는 함수 !!!! 무조건 한 번은 실행해야지.
-        //그다음에 받아온 사용자정보(string type)으로부터 Player 객체 동적할당하고 리스트에 추가
-        /*for(int i=0; i<받아온 데이터 줄 수; i++)
-        {
-           //String temp=받아온 string 한 줄. i로 인덱스줄수있겠지
-           //temp에서 id골라내고, gps좌표 골라내고, 상태메시지 등등 골라내서
-           if(map1PlayerList.get(i).getX()<36 && map1PlayerList.get(i).getY()<37)
-           {
-              //map1PlayerList.add(new Player(들어갈 정보들. 생성자참고));
-           }
-        }*/
-        //여기까지해서 리스트 만들었다 이제 맵에 표지하자
+
+    public void setList(ArrayList<User> list) {
+        mapPlayerList = list;
     }
 
-    private final LocationListener mLocationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-
-            lat = location.getLongitude(); //경도
-            lng = location.getLatitude();   //위도
-            /*자기자신 정보를 DB에 보내는 코드 작성*/
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-
-        }
-    };
-
-    public void setList(List<Player> list) {
-        map1PlayerList = list;
+    public ArrayList<User> getList() {
+        return mapPlayerList;
     }
 
-    public List<Player> getList() {
-        return map1PlayerList;
+    public LocationListener getmLocationListener()
+    {
+        return mLocationListener;
     }
+
+    public LocationManager getLm()
+    {
+        return lm;
+    }
+
+    /* base class의 마커, 어차피 세부맵에서 overriding해서 재정의*/
     public boolean onMarkerClick(Marker marker) {
         Toast.makeText(getApplicationContext(),
                 marker.getTitle() + "클릭했음"
                 , Toast.LENGTH_SHORT).show();
         return false;
     }
+
 }
+
 
 
 

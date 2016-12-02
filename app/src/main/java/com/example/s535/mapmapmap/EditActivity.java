@@ -14,6 +14,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -46,7 +47,6 @@ public class EditActivity extends Activity implements View.OnClickListener{
     private ImageButton btn4;
     private ImageButton btn5;
     private ImageButton btn6;
-    private Button btn_cancel;
     private Button btn_confirm;
     private Button btn_init;
     private ImageView Character;
@@ -57,25 +57,28 @@ public class EditActivity extends Activity implements View.OnClickListener{
     private String[] foot_type;
     private String[] foot_color;
     private String[] tag_type;
-    private String Email;
-    private List<User> infoList;
+    private ArrayList<User> list;//
+    private User currentUser;
 
     private DatabaseReference mRef;
 
     //은영추가
     private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
     //은영추가
 
-    private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day) {
-        User user = new User(foot_type, foot_color, tag_type, year, month, day);
+    private void writeNewUser(String userID, String foot_type, String foot_color, String tag_type, String year, String month, String day, String statusmessage) {
+        User user = new User(userID, foot_type, foot_color, tag_type, year, month, day, statusmessage,"0","0");
 
-        mRef.child(userID).child("foot_type").setValue(user.foot_type);
-        mRef.child(userID).child("foot_color").setValue(user.foot_color);
-        mRef.child(userID).child("tag_type").setValue(user.tag_type);
-        mRef.child(userID).child("year").setValue(user.year);
-        mRef.child(userID).child("month").setValue(user.month);
-        mRef.child(userID).child("day").setValue(user.day);
+        mRef.child(userID).child("user_id").setValue(userID);
+        mRef.child(userID).child("foot_type").setValue(foot_type);
+        mRef.child(userID).child("foot_color").setValue(foot_color);
+        mRef.child(userID).child("tag_type").setValue(tag_type);
+        mRef.child(userID).child("year").setValue(year);
+        mRef.child(userID).child("month").setValue(month);
+        mRef.child(userID).child("day").setValue(day);
+        mRef.child(userID).child("statusmessage").setValue(statusmessage);
+        mRef.child(userID).child("longitude").setValue(Double.toString(user.getLongitude()));
+        mRef.child(userID).child("latitude").setValue(Double.toString(user.getLatitude()));
     }
 
     protected void onCreate(Bundle savedInstanceState){
@@ -83,28 +86,78 @@ public class EditActivity extends Activity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
 
-        infoList = new ArrayList<User>();
-
-        //Firebase.setAndroidContext(this);
-        mRef = FirebaseDatabase.getInstance().getReference("Users");
-
         //은영추가
         mAuth = FirebaseAuth.getInstance();
-        //mAuthListener = new FirebaseAuth.AuthStateListener() {
-            /*@Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                if(firebaseAuth.getCurrentUser()==null){
-                    Intent loginIntent = new Intent(SettingActivity.this, LoginActivity.class);
-                    loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(loginIntent);
-                }
-            }
-        };*/
+        //은영추가
+        list = (ArrayList<User>) getIntent().getSerializableExtra("users");
+
+        //은영추가
+//        String user_id = mAuth.getCurrentUser().getUid();
         //은영추가
 
+        mRef=FirebaseDatabase.getInstance().getReference("Users");
+        String user_id = mAuth.getCurrentUser().getUid();
 
-        Intent intent=getIntent();
-        Email = intent.getStringExtra("Email");
+        currentUser = findUserByid(user_id);
+
+        txt_profile=(EditText) findViewById(R.id.Profile_content);
+        btn1 =(ImageButton) findViewById(R.id.character_left);
+        btn2=(ImageButton) findViewById(R.id.character_right);
+        btn3=(ImageButton) findViewById(R.id.color_left);
+        btn4=(ImageButton) findViewById(R.id.color_right);
+        btn5=(ImageButton) findViewById(R.id.tag_left);
+        btn6=(ImageButton) findViewById(R.id.tag_right);
+        btn1.setOnClickListener(this);
+        btn2.setOnClickListener(this);
+        btn3.setOnClickListener(this);
+        btn4.setOnClickListener(this);
+        btn5.setOnClickListener(this);
+        btn6.setOnClickListener(this);
+        btn_confirm=(Button)findViewById(R.id.confirm_setting);
+        btn_init=(Button)findViewById(R.id.init_setting);
+        btn_confirm.setOnClickListener(this);
+        btn_init.setOnClickListener(this);
+        Character = (ImageView)findViewById(R.id.character_pic);
+        textType =(TextView)findViewById(R.id.character_type);
+        textColor=(TextView)findViewById(R.id.character_color);
+        textTag=(TextView)findViewById(R.id.tag_type);
+        foot_type=getResources().getStringArray(R.array.foot_type);
+        foot_color=getResources().getStringArray(R.array.foot_color);
+        tag_type=getResources().getStringArray(R.array.tag_type);
+
+        color=currentUser.getFootColor();
+        type=currentUser.getFootType();
+        tag=currentUser.getTagType();
+        birthday_year=currentUser.getYear();
+        birthday_month=currentUser.getMonth();
+        birthday_day=currentUser.getDay();
+
+
+        txt_profile.setText(currentUser.getStatusmessage());
+        textType.setText(foot_type[type]);
+        textColor.setText(foot_color[color]);
+        textTag.setText(tag_type[tag]);
+
+        renewCharacter();
+
+
+        /*
+        DatabaseReference mRefCurrentUser;
+        mRefCurrentUser = mRef.child(user_id);
+        String CU_foot_type = mRefCurrentUser.child("foot_type").;
+        String CU_foot_color = mRefCurrentUser.child("foot_color").getKey();
+        String CU_tag_type = mRefCurrentUser.child("tag_type").getKey();
+        String CU_year = mRefCurrentUser.child("year").getKey();
+        String CU_month = mRefCurrentUser.child("month").getKey();
+        String CU_day = mRefCurrentUser.child("day").getKey();
+        String CU_statusmessage = mRefCurrentUser.child("statusmessage").getKey();
+        String CU_longitude = mRefCurrentUser.child("longitude").getKey();
+        String CU_latitude = mRefCurrentUser.child("latitude").getKey();
+        */
+
+
+
+
 
         yearSpinner = (Spinner)findViewById(R.id.spinner_year);
         ArrayAdapter yearAdapter = ArrayAdapter.createFromResource(this, R.array.date_year, android.R.layout.simple_spinner_dropdown_item);
@@ -151,35 +204,14 @@ public class EditActivity extends Activity implements View.OnClickListener{
                 }
         );
 
-        btn1 =(ImageButton) findViewById(R.id.character_left);
-        btn2=(ImageButton) findViewById(R.id.character_right);
-        btn3=(ImageButton) findViewById(R.id.color_left);
-        btn4=(ImageButton) findViewById(R.id.color_right);
-        btn5=(ImageButton) findViewById(R.id.tag_left);
-        btn6=(ImageButton) findViewById(R.id.tag_right);
-        btn1.setOnClickListener(this);
-        btn2.setOnClickListener(this);
-        btn3.setOnClickListener(this);
-        btn4.setOnClickListener(this);
-        btn5.setOnClickListener(this);
-        btn6.setOnClickListener(this);
-        btn_cancel=(Button)findViewById(R.id.cancel_setting);
-        btn_confirm=(Button)findViewById(R.id.confirm_setting);
-        btn_init=(Button)findViewById(R.id.init_setting);
-        btn_cancel.setOnClickListener(this);
-        btn_confirm.setOnClickListener(this);
-        btn_init.setOnClickListener(this);
-        Character = (ImageView)findViewById(R.id.character_pic);
-        textType =(TextView)findViewById(R.id.character_type);
-        textColor=(TextView)findViewById(R.id.character_color);
-        textTag=(TextView)findViewById(R.id.tag_type);
-        txt_profile=(EditText) findViewById(R.id.Profile_content);
-        foot_type=getResources().getStringArray(R.array.foot_type);
-        foot_color=getResources().getStringArray(R.array.foot_color);
-        tag_type=getResources().getStringArray(R.array.tag_type);
-        textType.setText(foot_type[type]);
-        textColor.setText(foot_color[color]);
-        textTag.setText(tag_type[tag]);
+        yearSpinner.setEnabled(false);
+        monthSpinner.setEnabled(false);
+        daySpinner.setEnabled(false);
+
+
+        yearSpinner.setSelection(birthday_year-1990);
+        monthSpinner.setSelection(birthday_month-1);
+        daySpinner.setSelection(birthday_day-1);
         renewCharacter();
     }
 
@@ -215,6 +247,7 @@ public class EditActivity extends Activity implements View.OnClickListener{
     }
 
     public void onClick(View v) {
+        String user_id = mAuth.getCurrentUser().getUid();
         switch (v.getId()) {
             case R.id.character_left:
                 type = type - 1;
@@ -257,70 +290,65 @@ public class EditActivity extends Activity implements View.OnClickListener{
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.init_setting:
-                color = 0;
-                type = 0;
-                tag = 0;
-                birthday_year = 1990;
-                birthday_month = 1;
-                birthday_day = 1;
-                yearSpinner.setSelection(0);
-                monthSpinner.setSelection(0);
-                daySpinner.setSelection(0);
-                txt_profile.setText("");
-                textType.setText(foot_type[type]);
-                textColor.setText(foot_color[color]);
-                textTag.setText(tag_type[tag]);
+                textType.setText(type);
+                textColor.setText(color);
+                textTag.setText(tag);
+                yearSpinner.setSelection(birthday_year-1990);
+                monthSpinner.setSelection(birthday_month-1);
+                daySpinner.setSelection(birthday_day-1);
+
+/*
+                DatabaseReference mRefCurrentUser;
+                mRefCurrentUser = mRef.child(user_id);
+                String CU_foot_type = mRefCurrentUser.child("foot_type").getKey();
+                String CU_foot_color = mRefCurrentUser.child("foot_color").getKey();
+                String CU_tag_type = mRefCurrentUser.child("tag_type").getKey();
+                String CU_year = mRefCurrentUser.child("year").getKey();
+                String CU_month = mRefCurrentUser.child("month").getKey();
+                String CU_day = mRefCurrentUser.child("day").getKey();
+                String CU_statusmessage = mRefCurrentUser.child("statusmessage").getKey();
+                String CU_longitude = mRefCurrentUser.child("longitude").getKey();
+                String CU_latitude = mRefCurrentUser.child("latitude").getKey();
+
+                User currentUser = new User(CU_foot_type, CU_foot_color, CU_tag_type, CU_year, CU_month, CU_day, CU_statusmessage,"0","0");
+*/
+                /*color=currentUser.getFootColor();
+                type=currentUser.getFootType();
+                tag=currentUser.getTagType();
+                birthday_year=currentUser.getYear();
+                birthday_month=currentUser.getMonth();
+                birthday_day=currentUser.getDay();
+               */
+
                 renewCharacter();
-                break;
-            case R.id.cancel_setting:
-                finish();
                 break;
             case R.id.confirm_setting:
 
-                String foot_type = textType.getText().toString();
-                String foot_color = textColor.getText().toString();
-                String tag_type = textTag.getText().toString();
+                String foot_type = String.valueOf(type);
+                String foot_color = String.valueOf(color);
+                String tag_type = String.valueOf(tag);
                 String year = Integer.toString(birthday_year);
                 String month = Integer.toString(birthday_month);
                 String day = Integer.toString(birthday_day);
+                String statusmessage = txt_profile.getText().toString();
 
                 //은영추가
-                String user_id = mAuth.getCurrentUser().getUid();
+                //String userid = mAuth.getCurrentUser().getUid();
                 //은영추가
 
-                writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day);
+                writeNewUser(user_id, foot_type, foot_color, tag_type, year, month, day, statusmessage);
 
-                Intent intent = new Intent(getApplicationContext(), SubActivity1.class);
-                startActivity(intent);
+                finish();
 
                 break;
         }
-        mRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
-                    User user = postSnapshot.getValue(User.class);
-                    infoList.add(user);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
-
-/*    @Override
-    public void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
-    }
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
+    User findUserByid(String id){
+        for (User user : list) {
+            if (user.getUser_id().equals(id)) {
+                return user;
+            }
         }
-    }*/
+        return null;
+    }
 }
