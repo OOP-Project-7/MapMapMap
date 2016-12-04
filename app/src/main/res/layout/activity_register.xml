@@ -17,8 +17,7 @@
         android:layout_centerHorizontal="true"
         android:hint="Password"
         android:layout_below="@+id/emailInput"
-        android:inputType="textWebPassword"
-        android:maxLength="10"/>
+        android:inputType="textWebPassword" />
 
     <Button
         android:layout_width="match_parent"

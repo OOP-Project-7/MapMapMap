@@ -47,7 +47,7 @@ public class User implements Serializable {
     }
     public String getBirthDay()
     {
-        return year+month+day;
+        return month+day;
     }
     public int getYear() {return Integer.parseInt(year);}
     public int getMonth() {return Integer.parseInt(month);}
