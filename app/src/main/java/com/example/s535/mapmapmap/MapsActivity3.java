@@ -2,18 +2,15 @@ package com.example.s535.mapmapmap;
 
 import android.graphics.Point;
 import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
-import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,6 +24,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity3 extends MapsActivity implements OnMapReadyCallback {
 
     private ToggleButton Bar_GPSToggle;
+    public final static int REPEAT_DELAY=1000;
+    public Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,16 +44,28 @@ public class MapsActivity3 extends MapsActivity implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(36.016393, 129.322329) //위도 경도
+
+        handler=new Handler()
+        {
+            public void handleMessage(Message msg)
+            {
+                super.handleMessage(msg);
+                drawPlayers(getList(), googleMap);
+                this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
+            }
+        };
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                 new LatLng(36.016393, 129.322329) //위도 경도
+                ,17
         ));
-        //googleMap.getUiSettings().setAllGesturesEnabled(false);
 
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.016193, 129.319499), new LatLng(36.016739, 129.324513)));
         googleMap.setMinZoomPreference(17);
-        MarkerOptions marker=new MarkerOptions();
+
         drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
 
+        MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.016393, 129.322329))
                 .title("기숙사")
                 .snippet("Dormitory!!");
@@ -66,9 +77,10 @@ public class MapsActivity3 extends MapsActivity implements OnMapReadyCallback {
                 try {
                     if (Bar_GPSToggle.isChecked()) {
                         Bar_GPSToggle.setBackgroundResource(R.mipmap.refreshbutton);
-                        drawPlayers(getList(), googleMap); //지도에 그리는함수. 나중에 실행시켜보고 수정필요??
+                        handler.sendEmptyMessage(0);
                     } else {
                         Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+                        handler.removeMessages(0);
                     }
                 } catch (SecurityException ex) {
                 }
@@ -112,18 +124,3 @@ public class MapsActivity3 extends MapsActivity implements OnMapReadyCallback {
                 });
     }
 }
-
-
-
-        /*mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
-
-
-/**
- * ATTENTION: This was auto-generated to implement the App Indexing API.
- * See https://g.co/AppIndexing/AndroidStudio for more information.
- */

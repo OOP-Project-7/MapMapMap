@@ -1,22 +1,16 @@
 package com.example.s535.mapmapmap;
 
-import android.content.Intent;
 import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
-import android.widget.Toast;
 import android.widget.ToggleButton;
-import android.os.Handler;
-
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,10 +21,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
 
@@ -70,12 +60,13 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
                 new LatLng(36.012588, 129.326288) //위도 경도
                 ,17
         ));
-        //googleMap.getUiSettings().setAllGesturesEnabled(false);
+
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010921 ,129.325962), new LatLng(36.012554, 129.328148)));
         googleMap.setMinZoomPreference(17);
-        MarkerOptions marker=new MarkerOptions();
+
         drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
 
+        MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.012588, 129.326288))
                 .title("지곡로")
                 .snippet("Jigok MainRoad");
@@ -87,22 +78,6 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
                 .snippet("이동하려면 클릭")
                 .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.chungam, (float) 0.3)));
         googleMap.addMarker(marker1).showInfoWindow();
-
-        /*googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener(){
-            @Override
-            public boolean onMarkerClick(Marker markertemp) {
-                Toast.makeText(getApplicationContext(),
-                        markertemp.getTitle() + "클릭했음"
-                        , Toast.LENGTH_SHORT).show();
-
-                if(markertemp.getTitle().equals(marker1.getTitle())) {
-                    Intent intent = new Intent(getApplicationContext(), MapsActivityLibrary.class);
-                    startActivity(intent);
-                }
-
-                return false;
-            }
-        });*/
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override

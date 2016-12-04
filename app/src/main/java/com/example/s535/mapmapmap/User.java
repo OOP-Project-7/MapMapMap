@@ -28,8 +28,8 @@ public class User implements Serializable {
         this.month = month;
         this.day = day;
         this.statusmessage = statusmessage;
-        this.latitude="0";
-        this.longitude="0";
+        this.latitude=latitude;
+        this.longitude=longitude;
     }
 
     public String getUser_id() { return user_id;}
@@ -58,10 +58,10 @@ public class User implements Serializable {
     }
     public double getLatitude()
     {
-        return Integer.parseInt(latitude);
+        return Double.parseDouble(latitude);
     }
     public double getLongitude()
     {
-        return Integer.parseInt(longitude);
+        return Double.parseDouble(longitude);
     }
 }

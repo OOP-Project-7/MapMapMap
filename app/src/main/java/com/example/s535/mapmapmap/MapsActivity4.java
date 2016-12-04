@@ -2,18 +2,15 @@ package com.example.s535.mapmapmap;
 
 import android.graphics.Point;
 import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
-import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,6 +24,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
 
     private ToggleButton Bar_GPSToggle;
+    public final static int REPEAT_DELAY=1000;
+    public Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,40 +42,45 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
         GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used. onMapReady는 맵이 사용가능하면 호출되는 callback메소드이다.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Seoul, Korea.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(
+
+        handler=new Handler()
+        {
+            public void handleMessage(Message msg)
+            {
+                super.handleMessage(msg);
+                drawPlayers(getList(), googleMap);
+                this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
+            }
+        };
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(36.021738, 129.323129) //위도 경도
+                ,17
         ));
 
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.019800, 129.315200), new LatLng(36.024157, 129.323000)));
         googleMap.setMinZoomPreference(17);
-        MarkerOptions marker=new MarkerOptions();
+
         drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
 
+        MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.021738, 129.323129))
                 .title("체육관 및 실험동")
                 .snippet("GYM");
         googleMap.addMarker(marker).showInfoWindow();
+
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     if (Bar_GPSToggle.isChecked()) {
                         Bar_GPSToggle.setBackgroundResource(R.mipmap.refreshbutton);
-                        drawPlayers(getList(), googleMap); //지도에 그리는함수. 나중에 실행시켜보고 수정필요??
+                        handler.sendEmptyMessage(0);
                     } else {
                         Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+                        handler.removeMessages(0);
                     }
                 } catch (SecurityException ex) {
                 }

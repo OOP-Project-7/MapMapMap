@@ -290,35 +290,19 @@ public class EditActivity extends Activity implements View.OnClickListener{
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.init_setting:
-                textType.setText(type);
-                textColor.setText(color);
-                textTag.setText(tag);
-                yearSpinner.setSelection(birthday_year-1990);
-                monthSpinner.setSelection(birthday_month-1);
-                daySpinner.setSelection(birthday_day-1);
-
-/*
-                DatabaseReference mRefCurrentUser;
-                mRefCurrentUser = mRef.child(user_id);
-                String CU_foot_type = mRefCurrentUser.child("foot_type").getKey();
-                String CU_foot_color = mRefCurrentUser.child("foot_color").getKey();
-                String CU_tag_type = mRefCurrentUser.child("tag_type").getKey();
-                String CU_year = mRefCurrentUser.child("year").getKey();
-                String CU_month = mRefCurrentUser.child("month").getKey();
-                String CU_day = mRefCurrentUser.child("day").getKey();
-                String CU_statusmessage = mRefCurrentUser.child("statusmessage").getKey();
-                String CU_longitude = mRefCurrentUser.child("longitude").getKey();
-                String CU_latitude = mRefCurrentUser.child("latitude").getKey();
-
-                User currentUser = new User(CU_foot_type, CU_foot_color, CU_tag_type, CU_year, CU_month, CU_day, CU_statusmessage,"0","0");
-*/
-                /*color=currentUser.getFootColor();
+                color=currentUser.getFootColor();
                 type=currentUser.getFootType();
                 tag=currentUser.getTagType();
                 birthday_year=currentUser.getYear();
                 birthday_month=currentUser.getMonth();
                 birthday_day=currentUser.getDay();
-               */
+                txt_profile.setText(currentUser.getStatusmessage());
+                textType.setText(foot_type[type]);
+                textColor.setText(foot_color[color]);
+                textTag.setText(tag_type[tag]);
+                yearSpinner.setSelection(birthday_year-1990);
+                monthSpinner.setSelection(birthday_month-1);
+                daySpinner.setSelection(birthday_day-1);
 
                 renewCharacter();
                 break;
