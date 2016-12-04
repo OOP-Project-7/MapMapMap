@@ -91,7 +91,8 @@
         android:id="@+id/Profile_content"
         android:hint="Write your profile"
         android:layout_gravity="center"
-        android:layout_margin="30dp" />
+        android:layout_margin="30dp"
+        android:maxLength="10"/>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
