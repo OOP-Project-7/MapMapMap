@@ -56,10 +56,11 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                 super.handleMessage(msg);
                 if(getmap1init()==false)
                 {
-                    initMarkers(getList(), googleMap);
+                    initMarkers(googleMap);
                     setmap1init(true);
                 }
-                drawPlayers(getMarkerList(), googleMap);
+                drawPlayers(googleMap);
+
                 this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
             }
         };
@@ -71,8 +72,9 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010070, 129.319867), new LatLng(36.012591, 129.322485)));
         googleMap.setMinZoomPreference(17);
+        googleMap.setMaxZoomPreference(18);
 
-        drawBuilding(getBuildingList(), googleMap, 17);
+        drawBuilding(getBuildingList(), googleMap);
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -94,7 +96,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                 new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(final Marker marker) {
-                        if (marker.getAlpha() == 1) {
+                        if(marker.getAlpha()==1) {
                             final Handler handler = new Handler();
 
                             final long startTime = SystemClock.uptimeMillis();
@@ -124,17 +126,13 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                                 }
                             });
                         }
-
-                        else
+                        else if(marker.getAlpha()==0.99)
                         {
-                            int i=0;
-                            for(i=0;i<getMarkerList().size();i++)
-                            {
-                                if(getMarkerList().get(i).getId()==marker.getId())
-                                    break;
-                            }
-                            myDialog dialog=new myDialog(MapsActivity1.this,getBuildingList().get(i).getVisitors());
-                            dialog.show();
+
+                        }
+                        else if(marker.getAlpha()==0.98)
+                        {
+
                         }
                         return false;
                     }

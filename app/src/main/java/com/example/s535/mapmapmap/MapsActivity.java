@@ -4,27 +4,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.Interpolator;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
-
 import android.Manifest;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -52,6 +41,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     /*status bar를 위한 변수선언(자기 자신에 대한 정보)*/
     private ArrayList<User> mapPlayerList;
     private List<Marker> markerList;
+    private List<Marker> tagMarkerList;
     private List<Building> buildingList;
     private List<Marker> buildingMarkerList;
     private String UserId;
@@ -66,6 +56,8 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     private boolean map2init;
     private boolean map3init;
     private boolean map4init;
+    private User curUser;
+    private int curUserindex;
 
 
     @Override
@@ -86,17 +78,14 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         /*여기에서 사용자들 정보를 서버에서 다 받아다가 리스트에 저장*/
         mapPlayerList = new ArrayList<User>(); //mapPlayerList공간 동적할당
         markerList=new ArrayList<Marker>();
+        tagMarkerList=new ArrayList<Marker>();
         buildingList=new ArrayList<Building>();
         buildingMarkerList=new ArrayList<Marker>();
         initBuildingList(buildingList);
-        final int buildingNum=17;
-        for(int i=0; i<buildingNum; i++)
+        for(int i=0; i<buildingList.size(); i++)
         {
             loadVisitor(buildingList.get(i));
         }
-
-
-
 
 
         mRef.addValueEventListener(new ValueEventListener() {
@@ -121,6 +110,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     mapPlayerList.add(user);
                     Bar_Setting.setEnabled(true);
                 }
+                renewStatusBar();
             }
 
             @Override
@@ -138,27 +128,12 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         Bar_Setting = (ImageButton) findViewById(R.id.Bar_Setting);
         Bar_Loc=(TextView)findViewById(R.id.Bar_Loc);
 
-        UserProfile = "상태메세지열자적은거";
-        UserTag = 0;
-        Bar_Profile.setText(UserProfile);
+
+        Bar_Profile.setText("");
+        Bar_Tag.setText("");
+
 
         Bar_Setting.setBackgroundResource(R.mipmap.settingbutton); //태그고치기
-        switch (UserTag) {
-            case 0:
-                Bar_Tag.setText("공지있어요");
-                break;
-            case 1:
-                Bar_Tag.setText("도와주세요");
-                break;
-            case 2:
-                Bar_Tag.setText("도와드려요");
-                break;
-            case 3:
-                Bar_Tag.setText("없음");
-        }
-
-        /*Bar_Loc설정*/
-
         Bar_Setting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -177,7 +152,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
             public void onLocationChanged(Location location) {
                 //여기서 위치값이 갱신되면 이벤트가 발생한다.
                 //값은 Location 형태로 리턴되며 좌표 출력 방법은 다음과 같다.
-                Toast.makeText(getApplicationContext(), "로케이션체인지", Toast.LENGTH_SHORT).show(); //여기도수정
                 lat = location.getLatitude();     //위도
                 lng = location.getLongitude();    //경도
                 editUserGps(UserId, Double.toString(lat), Double.toString(lng));
@@ -200,7 +174,6 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         catch (SecurityException ex){
             Toast.makeText(getApplicationContext(), "위치서비스를 켜주세요!!!", Toast.LENGTH_SHORT).show();
         }
-
         map1init=false;
         map2init=false;
         map3init=false;
@@ -248,49 +221,52 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         });
     }
 
-    public void initMarkers(ArrayList<User> UserList,  final GoogleMap googleMap) {
+    public void initMarkers(final GoogleMap googleMap) {
         for(int i=0; i<markerList.size(); i++)
         {
             markerList.get(i).remove();
+        }
+        for(int i=0; i<tagMarkerList.size(); i++)
+        {
+            tagMarkerList.get(i).remove();
         }
         MarkerOptions marker = new MarkerOptions();
         Marker markertemp;
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMd");
         String now = sdf.format(new Date());
-        for (int i = 0; i < UserList.size(); i++) {
-                if(UserList.get(i).getBirthDay().equals(now))
+        for (int i = 0; i < mapPlayerList.size(); i++) {
+                if(mapPlayerList.get(i).getBirthDay().equals(now))
                 {
-                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.birthdaycake, (float) 0.3)))
-                            .title(UserList.get(i).getStatusmessage());
-
+                            .title(mapPlayerList.get(i).getStatusmessage());
                     markertemp = googleMap.addMarker(marker);
                     markerList.add(markertemp);
                 }
                 else {
-                    switch (UserList.get(i).getFootType()) {
+                    switch (mapPlayerList.get(i).getFootType()) {
                         case 0:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bear_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -299,26 +275,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 1:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.bird_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -327,26 +303,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 2:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -355,26 +331,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 3:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -383,26 +359,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 4:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -411,26 +387,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 5:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -439,26 +415,26 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                             }
                             break;
                         case 6:
-                            switch (UserList.get(i).getFootColor()) {
+                            switch (mapPlayerList.get(i).getFootColor()) {
                                 case 0:
                                     // case에 따라 marker찍어주기
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_black, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 1:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_red, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
                                 case 2:
-                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                    marker.position(new LatLng(mapPlayerList.get(i).getLatitude(), mapPlayerList.get(i).getLongitude()))
                                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_blue, (float) 0.3)))
-                                            .title(UserList.get(i).getStatusmessage());
+                                            .title(mapPlayerList.get(i).getStatusmessage());
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -469,18 +445,66 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     }
                 }
         }
+
+        MarkerOptions marker1 = new MarkerOptions();
+        for(int i=0; i<mapPlayerList.size(); i++)
+        {
+            switch(mapPlayerList.get(i).getTagType())
+            {
+                case 0:
+                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
+                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)))
+                            .visible(true);
+                    markertemp=googleMap.addMarker(marker1);
+                    tagMarkerList.add(markertemp);
+                    break;
+                case 1:
+                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002,mapPlayerList.get(i).getLongitude()))
+                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)))
+                            .visible(true);
+                    markertemp=googleMap.addMarker(marker1);
+                    tagMarkerList.add(markertemp);
+                    break;
+                case 2:
+                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
+                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)))
+                            .visible(true);
+                    markertemp=googleMap.addMarker(marker1);
+                    tagMarkerList.add(markertemp);
+                    break;
+                case 3:
+                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
+                            .visible(false);
+                    markertemp=googleMap.addMarker(marker1);
+                    tagMarkerList.add(markertemp);
+            }
+        }
+        for(int i=0; i<tagMarkerList.size(); i++)
+        {
+            tagMarkerList.get(i).setAlpha((float)0.98);
+        }
+        for(int i=0; i<mapPlayerList.size(); i++)
+        {
+            if(mapPlayerList.get(i).getUser_id().equals(UserId)) {
+                curUserindex = i;
+                break;
+            }
+        }
         for(int i=0; i<markerList.size(); i++)
         {
             markerList.get(i).showInfoWindow();
+            tagMarkerList.get(i).showInfoWindow();
         }
+        markerList.get(curUserindex).showInfoWindow();
+        tagMarkerList.get(curUserindex).showInfoWindow();
         //지도상에 다 표지했다
     }
 
-    public void drawPlayers(List<Marker> MarkerList,  final GoogleMap googleMap)
+    public void drawPlayers(final GoogleMap googleMap)
     {
-        while(mapPlayerList.size()!=MarkerList.size())
+        while(mapPlayerList.size()!=markerList.size())
         {
-            initMarkers(mapPlayerList, googleMap);
+            initMarkers(googleMap);
         }
 
         SimpleDateFormat sdf = new SimpleDateFormat("MMd");
@@ -648,9 +672,34 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 }
             }
          }
+        for(int i=0; i<tagMarkerList.size(); i++)
+        {
+            switch(mapPlayerList.get(i).getTagType())
+            {
+                case 0:
+                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
+                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)));
+                    tagMarkerList.get(i).setVisible(true);
+                    break;
+                case 1:
+                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
+                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)));
+                    tagMarkerList.get(i).setVisible(true);
+                    break;
+                case 2:
+                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
+                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)));
+                    tagMarkerList.get(i).setVisible(true);
+                    break;
+                case 3:
+                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
+                    tagMarkerList.get(i).setVisible(false);
+                    break;
+            }
+        }
     }
 
-    public void drawBuilding(List<Building> list, final GoogleMap googleMap, int buildingNum)
+    public void drawBuilding(List<Building> list, final GoogleMap googleMap)
     {
         MarkerOptions marker = new MarkerOptions();
         Marker markertemp;
@@ -723,8 +772,20 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.tongzip, (float) 0.8)));
         markertemp = googleMap.addMarker(marker);
         buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(17).getbuildingLatitude(), list.get(17).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.gym, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(18).getbuildingLatitude(), list.get(18).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.laboratory, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(19).getbuildingLatitude(), list.get(19).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.accelerator, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
 
-        for(int i=0; i<buildingNum; i++)
+        for(int i=0; i<buildingList.size(); i++)
         {
             buildingMarkerList.get(i).setAlpha((float)0.99); //건물마커를 사용자마커와 구분짓기 위하여
             buildingMarkerList.get(i).showInfoWindow();
@@ -744,15 +805,16 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         list.add(new Building("gift", 36.011483, 129.327799));
         list.add(new Building("robot", 36.010816, 129.326695));
         list.add(new Building("jigok", 36.015356, 129.322565));
-        list.add(new Building("rc", 36.017869, 129.319180));
+        list.add(new Building("rc", 36.016837, 129.320320));
         list.add(new Building("mandorm", 36.016080, 129.320953));
         list.add(new Building("womandorm", 36.017015, 129.323278));
         list.add(new Building("apartment", 36.017228, 129.321115));
-        list.add(new Building("seveneight", 36.022290, 129.315666));
+        list.add(new Building("seveneight", 36.014902, 129.321607));
         list.add(new Building("tongzip", 36.017907, 129.322227));
+        list.add(new Building("gym",36.018612, 129.324106));
+        list.add(new Building("laboratory",36.021655, 129.319415));
+        list.add(new Building("accelerator",36.023543, 129.315588));
     }
-
-
 
     public boolean getmap1init(){return map1init;}
     public boolean getmap2init(){return map2init;}
@@ -785,5 +847,35 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     public void setBar_Loc(String loc)
     {
         Bar_Loc.setText(loc);
+    }
+
+    private void renewStatusBar()
+    {
+        curUser=findUserByid(UserId);
+        UserProfile=curUser.getStatusmessage();
+        UserTag=curUser.getTagType();
+        Bar_Profile.setText(UserProfile);
+        switch (UserTag) {
+            case 0:
+                Bar_Tag.setText("공지있어요");
+                break;
+            case 1:
+                Bar_Tag.setText("도와주세요");
+                break;
+            case 2:
+                Bar_Tag.setText("도와드려요");
+                break;
+            case 3:
+                Bar_Tag.setText("없음");
+        }
+    }
+
+    User findUserByid(String id){
+        for (User user : mapPlayerList) {
+            if (user.getUser_id().equals(id)) {
+                return user;
+            }
+        }
+        return null;
     }
 }

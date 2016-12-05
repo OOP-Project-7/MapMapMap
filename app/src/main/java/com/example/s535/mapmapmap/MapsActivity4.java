@@ -53,10 +53,12 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
                 super.handleMessage(msg);
                 if(getmap4init()==false)
                 {
-                    initMarkers(getList(), googleMap);
+                    initMarkers( googleMap);
                     setmap4init(true);
                 }
-                drawPlayers(getMarkerList(), googleMap);
+
+                drawPlayers(googleMap);
+
                 this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
             }
         };
@@ -68,8 +70,9 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
 
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.019800, 129.315200), new LatLng(36.024157, 129.323000)));
         googleMap.setMinZoomPreference(17);
+        googleMap.setMaxZoomPreference(18);
 
-        drawBuilding(getBuildingList(), googleMap, 17);
+        drawBuilding(getBuildingList(), googleMap);
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,18 +124,16 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
                                 }
                             });
                         }
-                    else {
-                            int i = 0;
-                            for (i = 0; i < getMarkerList().size(); i++) {
-                                if (getMarkerList().get(i).getId() == marker.getId())
-                                    break;
-                            }
-                            myDialog dialog = new myDialog(MapsActivity4.this, getBuildingList().get(i).getVisitors());
-                            dialog.show();
+                        else if(marker.getAlpha()==0.99)
+                        {
+
+                        }
+                        else if(marker.getAlpha()==0.98)
+                        {
+
                         }
                         return false;
                     }
                 });
-
     }
 }

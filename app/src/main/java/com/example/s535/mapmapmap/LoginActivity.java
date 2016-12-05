@@ -111,12 +111,12 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                         .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                                 @Override
                                 public void onComplete(@NonNull Task<AuthResult> task) {
+                                        mProgress.dismiss();
                                         //추가한부분2
                                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                                         if (user != null) {
                                                 if(!user.isEmailVerified()){
                                                         user.sendEmailVerification();
-                                                        mProgress.dismiss();
                                                         Toast.makeText(LoginActivity.this,"Check your email first...",Toast.LENGTH_LONG).show();
                                                 }
                                                 else{
@@ -125,19 +125,18 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                                                         // the auth state listener will be notified and logic to handle the
                                                         // signed in user can be handled in the listener.
                                                         if (!task.isSuccessful()) {
-                                                                mProgress.dismiss();
                                                                 Log.w(TAG, "signInWithEmail:failed", task.getException());
                                                                 Toast.makeText(LoginActivity.this, "Sign In Problem",
                                                                         Toast.LENGTH_SHORT).show();
                                                         }
                                                         else {
-                                                                mProgress.dismiss();
                                                                 Toast.makeText(LoginActivity.this, "You are in =)", Toast.LENGTH_LONG).show();
                                                                 finish();
                                                         }
                                                 }
                                                 // User is signed in
                                         } else {
+                                                Toast.makeText(LoginActivity.this, "Register first", Toast.LENGTH_LONG).show();
                                                 // No user is signed in
                                         }
                                         //추가끝2
