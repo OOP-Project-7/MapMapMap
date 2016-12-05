@@ -1,6 +1,8 @@
 package com.example.s535.mapmapmap;
 
 import android.graphics.Point;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -22,7 +24,15 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
-
+    private SoundPool sound_pool;
+    private int sound_error;
+    private void initSound(){
+        sound_pool = new SoundPool(5, AudioManager.STREAM_ALARM,0);
+        sound_error = sound_pool.load(this,R.raw.userclick,1);
+    }
+    public void playSound(){
+        sound_pool.play(sound_error, 1f, 1f,0,0,1.5f);
+    }
     private ToggleButton Bar_GPSToggle;
     public final static int REPEAT_DELAY=1000;
     public Handler handler;
@@ -30,6 +40,7 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initSound();
         setBar_Loc("실험동가속기");
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -95,6 +106,7 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
                     @Override
                     public boolean onMarkerClick(final Marker marker) {
                         if(marker.getAlpha()==1) {
+                            playSound();
                             final Handler handler = new Handler();
 
                             final long startTime = SystemClock.uptimeMillis();
@@ -126,7 +138,13 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
                         }
                         else if(marker.getAlpha()==0.99)
                         {
-
+                            int i = 0;
+                            for (i = 0; i < getBuildingMarkerList().size(); i++) {
+                                if (getBuildingMarkerList().get(i).getPosition().equals(marker.getPosition()))
+                                    break;
+                            }
+                            myDialog dialog = new myDialog(MapsActivity4.this, getBuildingList().get(i).getbuildingName());
+                            dialog.show();
                         }
                         else if(marker.getAlpha()==0.98)
                         {

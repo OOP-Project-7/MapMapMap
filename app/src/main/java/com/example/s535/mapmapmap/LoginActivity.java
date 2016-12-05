@@ -3,6 +3,8 @@ package com.example.s535.mapmapmap;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -23,6 +25,15 @@ import java.util.regex.Pattern;
 
 public class LoginActivity extends Activity implements View.OnClickListener {
 
+        private SoundPool sound_pool;
+        private int sound_error;
+        private void initSound(){
+                sound_pool = new SoundPool(5, AudioManager.STREAM_ALARM,0);
+                sound_error = sound_pool.load(this,R.raw.error,1);
+        }
+        public void playSound(){
+                sound_pool.play(sound_error, 1f, 1f,0,0,1.5f);
+        }
         private static final String TAG = "EmailPassword";
 
         private EditText mEmailField;
@@ -43,7 +54,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         public void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 setContentView(R.layout.activity_login);
-
+                initSound();
                 mProgress = new ProgressDialog(this);
                 //mDatabase = FirebaseDatabase.getInstance().getReference().child("Users");
 
@@ -102,6 +113,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                 mProgress.show();
                 Log.d(TAG, "signIn:" + email);
                 if (!validateForm()) {
+                        playSound();
                         mProgress.dismiss();
                         return;
                 }

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -24,10 +26,9 @@ public class SubActivity1 extends AppCompatActivity{
     ImageView map2;
     ImageView map3;
     ImageView map4;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
+        startService(new Intent(this,BackgroundMusic.class));
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);
 

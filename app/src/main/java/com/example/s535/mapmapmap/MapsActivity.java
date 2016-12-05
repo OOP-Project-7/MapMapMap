@@ -792,6 +792,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         }
     }
 
+
     public void initBuildingList(List<Building> list)
     {
         list.add(new Building("playground", 36.013526, 129.319836));
@@ -835,6 +836,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     public List<Building> getBuildingList() {
         return buildingList;
     }
+    public List<Marker> getBuildingMarkerList(){return buildingMarkerList;}
 
     //base class의 마커, 어차피 세부맵에서 overriding해서 재정의
     public boolean onMarkerClick(Marker marker) {
