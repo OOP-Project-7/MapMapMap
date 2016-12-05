@@ -51,7 +51,12 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
             public void handleMessage(Message msg)
             {
                 super.handleMessage(msg);
-                drawPlayers(getList(), googleMap);
+                if(getmap4init()==false)
+                {
+                    initMarkers(getList(), googleMap);
+                    setmap4init(true);
+                }
+                drawPlayers(getMarkerList(), googleMap);
                 this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
             }
         };
@@ -64,14 +69,7 @@ public class MapsActivity4 extends MapsActivity implements OnMapReadyCallback {
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.019800, 129.315200), new LatLng(36.024157, 129.323000)));
         googleMap.setMinZoomPreference(17);
 
-        drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
         drawBuilding(getBuildingList(), googleMap, 17);
-
-        MarkerOptions marker=new MarkerOptions();
-        marker.position(new LatLng(36.021738, 129.323129))
-                .title("체육관 및 실험동")
-                .snippet("GYM");
-        googleMap.addMarker(marker).showInfoWindow();
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override

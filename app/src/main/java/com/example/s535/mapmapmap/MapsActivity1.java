@@ -48,12 +48,18 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
 
+
         handler=new Handler()
         {
             public void handleMessage(Message msg)
             {
                 super.handleMessage(msg);
-                drawPlayers(getList(), googleMap);
+                if(getmap1init()==false)
+                {
+                    initMarkers(getList(), googleMap);
+                    setmap1init(true);
+                }
+                drawPlayers(getMarkerList(), googleMap);
                 this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
             }
         };
@@ -66,16 +72,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010070, 129.319867), new LatLng(36.012591, 129.322485)));
         googleMap.setMinZoomPreference(17);
 
-        drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수 이거수정요함
         drawBuilding(getBuildingList(), googleMap, 17);
-
-       //지도상에 다 표지했다
-        MarkerOptions marker=new MarkerOptions();
-        marker.position(new LatLng(36.011791, 129.321883))
-                .title("대강당앞광장")
-                .snippet("LargePlace"); //나중엔지울거
-
-        googleMap.addMarker(marker).showInfoWindow();
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override

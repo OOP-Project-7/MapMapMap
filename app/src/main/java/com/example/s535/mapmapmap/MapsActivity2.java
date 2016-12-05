@@ -52,7 +52,12 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
             public void handleMessage(Message msg)
             {
                 super.handleMessage(msg);
-                drawPlayers(getList(), googleMap);
+                if(getmap2init()==false)
+                {
+                    initMarkers(getList(), googleMap);
+                    setmap2init(true);
+                }
+                drawPlayers(getMarkerList(), googleMap);
                 this.sendEmptyMessageDelayed(0,REPEAT_DELAY);
             }
         };
@@ -65,14 +70,7 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010910, 129.325546), new LatLng(36.012554, 129.328148)));
         googleMap.setMinZoomPreference(17);
 
-        drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
         drawBuilding(getBuildingList(), googleMap, 17);
-
-        MarkerOptions marker=new MarkerOptions();
-        marker.position(new LatLng(36.012588, 129.326288))
-                .title("지곡로")
-                .snippet("Jigok MainRoad");
-        googleMap.addMarker(marker).showInfoWindow();
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
