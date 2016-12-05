@@ -91,34 +91,45 @@ public class MapsActivity3 extends MapsActivity implements OnMapReadyCallback {
                 new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(final Marker marker) {
-                        final Handler handler = new Handler();
+                        if(marker.getAlpha()==1) {
+                            final Handler handler = new Handler();
 
-                        final long startTime = SystemClock.uptimeMillis();
-                        final long duration = 500; //이거 애니메이션 duration임 작을수록 빠르게튄다
+                            final long startTime = SystemClock.uptimeMillis();
+                            final long duration = 500; //이거 애니메이션 duration임 작을수록 빠르게튄다
 
-                        Projection proj = googleMap.getProjection();
-                        final LatLng markerLatLng = marker.getPosition();
-                        Point startPoint = proj.toScreenLocation(markerLatLng);
-                        startPoint.offset(0, -100);
-                        final LatLng startLatLng = proj.fromScreenLocation(startPoint);
+                            Projection proj = googleMap.getProjection();
+                            final LatLng markerLatLng = marker.getPosition();
+                            Point startPoint = proj.toScreenLocation(markerLatLng);
+                            startPoint.offset(0, -100);
+                            final LatLng startLatLng = proj.fromScreenLocation(startPoint);
 
-                        final Interpolator interpolator = new BounceInterpolator();
+                            final Interpolator interpolator = new BounceInterpolator();
 
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                long elapsed = SystemClock.uptimeMillis() - startTime;
-                                float t = interpolator.getInterpolation((float) elapsed / duration);
-                                double lng = t * markerLatLng.longitude + (1 - t) * startLatLng.longitude;
-                                double lat = t * markerLatLng.latitude + (1 - t) * startLatLng.latitude;
-                                marker.setPosition(new LatLng(lat, lng));
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    long elapsed = SystemClock.uptimeMillis() - startTime;
+                                    float t = interpolator.getInterpolation((float) elapsed / duration);
+                                    double lng = t * markerLatLng.longitude + (1 - t) * startLatLng.longitude;
+                                    double lat = t * markerLatLng.latitude + (1 - t) * startLatLng.latitude;
+                                    marker.setPosition(new LatLng(lat, lng));
 
-                                if (t <1.0 ) {
-                                    // Post again 16ms later.
-                                    handler.postDelayed(this, 16);
+                                    if (t < 1.0) {
+                                        // Post again 16ms later.
+                                        handler.postDelayed(this, 16);
+                                    }
                                 }
+                            });
+                        }
+                        else {
+                            int i = 0;
+                            for (i = 0; i < getMarkerList().size(); i++) {
+                                if (getMarkerList().get(i).getId() == marker.getId())
+                                    break;
                             }
-                        });
+                            myDialog dialog = new myDialog(MapsActivity3.this, getBuildingList().get(i).getVisitors());
+                            dialog.show();
+                        }
                         return false;
                     }
                 });
