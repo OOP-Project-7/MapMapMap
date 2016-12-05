@@ -106,7 +106,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                 new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(final Marker marker) {
-                        if (marker.getAlpha() == 1) {
+                        if (marker.getAlpha() == (float)1) {
                             playSound();
                             final Handler handler = new Handler();
 
@@ -137,7 +137,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                                 }
                             });
                         }
-                        else if(marker.getAlpha()==0.99)
+                        else if(marker.getAlpha()==(float)0.99)
                         {
                             int i=0;
                             for(i=0;i<getBuildingMarkerList().size();i++)
@@ -147,9 +147,8 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                             }
                             myDialog dialog=new myDialog(MapsActivity1.this,getBuildingList().get(i).getbuildingName());
                             dialog.show();
-
                         }
-                        else if(marker.getAlpha()==0.98)
+                        else if(marker.getAlpha()==(float)0.98)
                         {
 
                         }
