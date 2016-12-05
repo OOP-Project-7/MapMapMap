@@ -168,33 +168,66 @@ public class SettingActivity extends Activity implements View.OnClickListener{
 
     protected void renewCharacter()
     {
-        if(type==0)
+        switch(type)
         {
-            if(color==0)
-                Character.setImageResource(R.mipmap.bear_black);
-            else if(color==1)
-                Character.setImageResource(R.mipmap.bear_red);
-            else if(color==2)
-                Character.setImageResource(R.mipmap.bear_blue);
+            case 0:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.bear_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.bear_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.bear_blue);
+                break;
+            case 1:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.bird_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.bird_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.bird_blue);
+                break;
+            case 2:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.frog_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.frog_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.frog_blue);
+                break;
+            case 3:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.dog_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.dog_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.dog_blue);
+                break;
+            case 4:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.man_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.man_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.man_blue);
+                break;
+            case 5:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.snickers_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.snickers_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.snickers_blue);
+                break;
+            case 6:
+                if(color==0)
+                    Character.setImageResource(R.mipmap.heel_black);
+                else if(color==1)
+                    Character.setImageResource(R.mipmap.heel_red);
+                else if(color==2)
+                    Character.setImageResource(R.mipmap.heel_blue);
+                break;
         }
-        if(type==1)
-        {
-            if(color==0)
-                Character.setImageResource(R.mipmap.bird_black);
-            else if(color==1)
-                Character.setImageResource(R.mipmap.bird_red);
-            else if(color==2)
-                Character.setImageResource(R.mipmap.bird_blue);
-        }
-        if(type==2)
-        {
-            if(color==0)
-                Character.setImageResource(R.mipmap.frog_black);
-            else if(color==1)
-                Character.setImageResource(R.mipmap.frog_red);
-            else if(color==2)
-                Character.setImageResource(R.mipmap.frog_red);
-        }
+
     }
 
     public void onClick(View v) {
@@ -202,14 +235,14 @@ public class SettingActivity extends Activity implements View.OnClickListener{
             case R.id.character_left:
                 type = type - 1;
                 if (type < 0)
-                    type = type + 3;
+                    type = type + 7;
                 textType.setText(foot_type[type]);
                 renewCharacter();
                 break;
             case R.id.character_right:
                 type = type + 1;
-                if (type > 2)
-                    type = type - 3;
+                if (type > 6)
+                    type = type - 7;
                 textType.setText(foot_type[type]);
                 renewCharacter();
                 break;
@@ -230,13 +263,13 @@ public class SettingActivity extends Activity implements View.OnClickListener{
             case R.id.tag_left:
                 tag = tag - 1;
                 if (tag < 0)
-                    tag = tag + 3;
+                    tag = tag + 4;
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.tag_right:
                 tag = tag + 1;
-                if (tag > 2)
-                    tag = tag - 3;
+                if (tag > 3)
+                    tag = tag - 4;
                 textTag.setText(tag_type[tag]);
                 break;
             case R.id.registerButton:

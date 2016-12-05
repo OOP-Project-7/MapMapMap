@@ -44,11 +44,16 @@ import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarkerClickListener {
 
-    private ArrayList<User> mapPlayerList;
+
     private DatabaseReference mRef;
+    private DatabaseReference mbRef; // 방명록
     private FirebaseAuth mAuth;
 
     /*status bar를 위한 변수선언(자기 자신에 대한 정보)*/
+    private ArrayList<User> mapPlayerList;
+    private List<Marker> markerList;
+    private List<Building> buildingList;
+    private List<Marker> buildingMarkerList;
     private String UserId;
     private String UserProfile;
     private int UserTag;
@@ -57,7 +62,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     private ImageButton Bar_Setting;
     private LocationManager lm;
     private LocationListener mLocationListener;
-    private List<Marker> markerList;
+
     private int markerNum;
 
     @Override
@@ -70,14 +75,27 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
             //map의 oncreate에서 내 GPS좌표 얻어다가 서버에 보내서 내 좌표 초기화시켜줘야한다
         }
+        mRef = FirebaseDatabase.getInstance().getReference("Users");
+        mbRef = FirebaseDatabase.getInstance().getReference("Buildings");
+        mAuth = FirebaseAuth.getInstance();
+
 
         /*여기에서 사용자들 정보를 서버에서 다 받아다가 리스트에 저장*/
         mapPlayerList = new ArrayList<User>(); //mapPlayerList공간 동적할당
         markerList=new ArrayList<Marker>();
+        buildingList=new ArrayList<Building>();
+        buildingMarkerList=new ArrayList<Marker>();
+        initBuildingList(buildingList);
+        final int buildingNum=17;
+        for(int i=0; i<buildingNum; i++)
+        {
+            loadVisitor(buildingList.get(i));
+        }
+
+
+
         markerNum=0;
 
-        mRef = FirebaseDatabase.getInstance().getReference("Users");
-        mAuth = FirebaseAuth.getInstance();
 
 
         mRef.addValueEventListener(new ValueEventListener() {
@@ -126,14 +144,16 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         Bar_Setting.setBackgroundResource(R.mipmap.settingbutton); //태그고치기
         switch (UserTag) {
             case 0:
-                Bar_Tag.setText("A");
+                Bar_Tag.setText("공지있어요");
                 break;
             case 1:
-                Bar_Tag.setText("B");
+                Bar_Tag.setText("도와주세요");
                 break;
             case 2:
-                Bar_Tag.setText("C");
+                Bar_Tag.setText("도와드려요");
                 break;
+            case 3:
+                Bar_Tag.setText("없음");
         }
 
         /*Bar_Loc설정*/
@@ -194,6 +214,34 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         return bitmapOut;
     }
 
+    public void saveVisitor (Building building, String visitor) {
+        String key;
+        key = mbRef.child(building.getbuildingName()).push().getKey();
+        mbRef.child(building.getbuildingName()).child(key).setValue(visitor);
+        //방명록 서버에 저장
+    }
+
+    public void loadVisitor (final Building building) {
+        mbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
+                    if (building.getbuildingName().equals(postSnapshot.getKey())) {
+                        for(DataSnapshot postpostSnapshot: postSnapshot.getChildren()) {
+                            String visitor = (String) postpostSnapshot.getValue();
+                            building.getVisitors().add(visitor);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
     public void drawPlayers(ArrayList<User> UserList,  final GoogleMap googleMap) {
         for(int i=0; i<markerNum; i++)
@@ -203,14 +251,16 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         MarkerOptions marker = new MarkerOptions();
         Marker markertemp;
 
+        SimpleDateFormat sdf = new SimpleDateFormat("MMd");
+        String now = sdf.format(new Date());
         for (int i = 0; i < UserList.size(); i++) {
             if (UserList.get(i).getLatitude() != 0) {
-                SimpleDateFormat sdf = new SimpleDateFormat("MMd");
-                String now = sdf.format(new Date());
+
                 if(UserList.get(i).getBirthDay().equals(now))
                 {
                     marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
                             .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.birthdaycake, (float) 0.3)));
+
                     markertemp = googleMap.addMarker(marker);
                     markerList.add(markertemp);
                 }
@@ -289,7 +339,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                                     break;
                                 case 2:
                                     marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
-                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_red, (float) 0.3)));
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.frog_blue, (float) 0.3)));
                                     markertemp = googleMap.addMarker(marker);
                                     markerList.add(markertemp);
                                     break;
@@ -297,7 +347,105 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                                     break;
                             }
                             break;
-                        default:
+                        case 3:
+                            switch (UserList.get(i).getFootColor()) {
+                                case 0:
+                                    // case에 따라 marker찍어주기
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_black, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 1:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_red, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 2:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.dog_blue, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case 4:
+                            switch (UserList.get(i).getFootColor()) {
+                                case 0:
+                                    // case에 따라 marker찍어주기
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_black, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 1:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_red, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 2:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.man_blue, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case 5:
+                            switch (UserList.get(i).getFootColor()) {
+                                case 0:
+                                    // case에 따라 marker찍어주기
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_black, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 1:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_red, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 2:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.snickers_blue, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        case 6:
+                            switch (UserList.get(i).getFootColor()) {
+                                case 0:
+                                    // case에 따라 marker찍어주기
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_black, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 1:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_red, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                case 2:
+                                    marker.position(new LatLng(UserList.get(i).getLatitude(), UserList.get(i).getLongitude()))
+                                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.heel_blue, (float) 0.3)));
+                                    markertemp = googleMap.addMarker(marker);
+                                    markerList.add(markertemp);
+                                    break;
+                                default:
+                                    break;
+                            }
                             break;
                     }
                 }
@@ -313,14 +461,118 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         //지도상에 다 표지했다
     }
 
+    public void drawBuilding(List<Building> list, final GoogleMap googleMap, int buildingNum)
+    {
+        MarkerOptions marker = new MarkerOptions();
+        Marker markertemp;
+
+        marker.position(new LatLng(list.get(0).getbuildingLatitude(), list.get(0).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.playground, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(1).getbuildingLatitude(), list.get(1).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.plaza, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(2).getbuildingLatitude(), list.get(2).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.rist, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(3).getbuildingLatitude(), list.get(3).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hall, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(4).getbuildingLatitude(), list.get(4).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hwanljung, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(5).getbuildingLatitude(), list.get(5).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.library, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(6).getbuildingLatitude(), list.get(6).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.c5, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(7).getbuildingLatitude(), list.get(7).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.life, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(8).getbuildingLatitude(), list.get(8).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.gift, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(9).getbuildingLatitude(), list.get(9).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.robot, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(10).getbuildingLatitude(), list.get(10).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.jigok, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(11).getbuildingLatitude(), list.get(11).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.rc, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(12).getbuildingLatitude(), list.get(12).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.mandorm, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(13).getbuildingLatitude(), list.get(13).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.womandorm, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(14).getbuildingLatitude(), list.get(14).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.apartment, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(15).getbuildingLatitude(), list.get(15).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.seveneight, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+        marker.position(new LatLng(list.get(16).getbuildingLatitude(), list.get(16).getbuildingLongitude()))
+                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.tongzip, (float) 0.8)));
+        markertemp = googleMap.addMarker(marker);
+        buildingMarkerList.add(markertemp);
+
+        for(int i=0; i<buildingNum; i++)
+        {
+            buildingMarkerList.get(i).setAlpha((float)0.99); //건물마커를 사용자마커와 구분짓기 위하여
+            buildingMarkerList.get(i).showInfoWindow();
+        }
+    }
+
+    public void initBuildingList(List<Building> list)
+    {
+        list.add(new Building("playground", 36.013526, 129.319836));
+        list.add(new Building("plaza", 36.011917, 129.321739));
+        list.add(new Building("rist", 36.010285, 129.324490));
+        list.add(new Building("hall", 36.013257, 129.321291));
+        list.add(new Building("hwanljung", 36.011714, 129.320300));
+        list.add(new Building("library", 36.012272, 129.325658));
+        list.add(new Building("c5", 36.013803, 129.326008));
+        list.add(new Building("life", 36.011196, 129.325801));
+        list.add(new Building("gift", 36.011483, 129.327799));
+        list.add(new Building("robot", 36.010816, 129.326695));
+        list.add(new Building("jigok", 36.015356, 129.322565));
+        list.add(new Building("rc", 36.017869, 129.319180));
+        list.add(new Building("mandorm", 36.016080, 129.320953));
+        list.add(new Building("womandorm", 36.017015, 129.323278));
+        list.add(new Building("apartment", 36.017228, 129.321115));
+        list.add(new Building("seveneight", 36.022290, 129.315666));
+        list.add(new Building("tongzip", 36.017907, 129.322227));
+    }
+
+
 
 
     public void setList(ArrayList<User> list) {
         mapPlayerList = list;
     }
 
-    public ArrayList<User> getList() {
-        return mapPlayerList;
+    public ArrayList<User> getList() {return mapPlayerList;}
+    public List<Building> getBuildingList() {
+        return buildingList;
     }
 
     //base class의 마커, 어차피 세부맵에서 overriding해서 재정의

@@ -62,23 +62,17 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
                 ,17
         ));
 
-        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010921 ,129.325962), new LatLng(36.012554, 129.328148)));
+        googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(36.010910, 129.325546), new LatLng(36.012554, 129.328148)));
         googleMap.setMinZoomPreference(17);
 
         drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수
+        drawBuilding(getBuildingList(), googleMap, 17);
 
         MarkerOptions marker=new MarkerOptions();
         marker.position(new LatLng(36.012588, 129.326288))
                 .title("지곡로")
                 .snippet("Jigok MainRoad");
         googleMap.addMarker(marker).showInfoWindow();
-
-        final MarkerOptions marker1=new MarkerOptions();
-        marker1.position(new LatLng(36.012839, 129.325154))
-                .title("도서관")
-                .snippet("이동하려면 클릭")
-                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.chungam, (float) 0.3)));
-        googleMap.addMarker(marker1).showInfoWindow();
 
         Bar_GPSToggle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,5 +126,4 @@ public class MapsActivity2 extends MapsActivity implements OnMapReadyCallback {
                     }
                 });
     }
-
 }

@@ -13,6 +13,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class SubActivity1 extends AppCompatActivity{
     ImageView pngmap;
     ImageView mainmap;
@@ -210,5 +214,18 @@ public class SubActivity1 extends AppCompatActivity{
                 return false;
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        String myID = mAuth.getCurrentUser().getUid();
+        DatabaseReference mRef = FirebaseDatabase.getInstance().getReference("Users");
+        mRef.child(myID).child("latitude").setValue("0");
+        mRef.child(myID).child("longitude").setValue("0");
+        mAuth.signOut();
+        moveTaskToBack(true);
+        finish();
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 }

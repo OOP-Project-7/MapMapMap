@@ -67,6 +67,7 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
         googleMap.setMinZoomPreference(17);
 
         drawPlayers(getList(), googleMap); //처음 한번은 그려야지그리는함수 이거수정요함
+        drawBuilding(getBuildingList(), googleMap, 17);
 
        //지도상에 다 표지했다
         MarkerOptions marker=new MarkerOptions();

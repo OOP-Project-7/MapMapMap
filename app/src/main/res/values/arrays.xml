@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="foot_type">
-        <item>곰발바닥</item>
-        <item>새발바닥</item>
-        <item>개구리발바닥</item>
+        <item>곰발</item>
+        <item>새발</item>
+        <item>개구리발</item>
+        <item>강아지발</item>
+        <item>사람발</item>
+        <item>운동화발</item>
+        <item>하이힐발</item>
     </string-array>
     <string-array name="foot_color">
         <item>검정</item>
@@ -11,8 +15,9 @@
         <item>파랑</item>
     </string-array>
     <string-array name="tag_type">
-        <item>A</item>
-        <item>B</item>
-        <item>C</item>
+        <item>공지있어요</item>
+        <item>도와주세요</item>
+        <item>도와드려요</item>
+        <item>없음</item>
     </string-array>
 </resources>
