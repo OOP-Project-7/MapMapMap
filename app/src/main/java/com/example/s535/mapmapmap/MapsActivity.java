@@ -9,14 +9,19 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
+import android.widget.ToggleButton;
+
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -58,13 +63,14 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
     private boolean map4init;
     private User curUser;
     private int curUserindex;
-
+    protected ToggleButton Bar_GPSToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             // only for gingerbread and newer versions
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
@@ -108,8 +114,10 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                     User user = new User(user_id, foot_type, foot_color, tag_type, year, month, day, statusmessage, latitude, longitude);
 
                     mapPlayerList.add(user);
-                    Bar_Setting.setEnabled(true);
+
                 }
+                Bar_GPSToggle.setEnabled(true);
+                Bar_Setting.setEnabled(true);
                 renewStatusBar();
             }
 
@@ -200,19 +208,19 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         //방명록 서버에 저장
     }
 
-    public void loadVisitor (final Building building) {
-        mbRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
-                    if (building.getbuildingName().equals(postSnapshot.getKey())) {
-                        for(DataSnapshot postpostSnapshot: postSnapshot.getChildren()) {
-                            String visitor = (String) postpostSnapshot.getValue();
-                            building.getVisitors().add(visitor);
+            public void loadVisitor (final Building building) {
+                mbRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot postSnapshot: dataSnapshot.getChildren()) {
+                            if (building.getbuildingName().equals(postSnapshot.getKey())) {
+                                for(DataSnapshot postpostSnapshot: postSnapshot.getChildren()) {
+                                    String visitor = (String) postpostSnapshot.getValue();
+                                    building.getVisitors().add(visitor);
+                                }
+                            }
                         }
                     }
-                }
-            }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -230,6 +238,8 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         {
             tagMarkerList.get(i).remove();
         }
+        markerList.clear();
+        tagMarkerList.clear();
         MarkerOptions marker = new MarkerOptions();
         Marker markertemp;
 
@@ -447,36 +457,43 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
         }
 
         MarkerOptions marker1 = new MarkerOptions();
-        for(int i=0; i<mapPlayerList.size(); i++)
-        {
-            switch(mapPlayerList.get(i).getTagType())
-            {
-                case 0:
-                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
-                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)))
-                            .visible(true);
-                    markertemp=googleMap.addMarker(marker1);
-                    tagMarkerList.add(markertemp);
-                    break;
-                case 1:
-                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002,mapPlayerList.get(i).getLongitude()))
-                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)))
-                            .visible(true);
-                    markertemp=googleMap.addMarker(marker1);
-                    tagMarkerList.add(markertemp);
-                    break;
-                case 2:
-                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
-                            .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)))
-                            .visible(true);
-                    markertemp=googleMap.addMarker(marker1);
-                    tagMarkerList.add(markertemp);
-                    break;
-                case 3:
-                    marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
-                            .visible(false);
-                    markertemp=googleMap.addMarker(marker1);
-                    tagMarkerList.add(markertemp);
+        for(int i=0; i<mapPlayerList.size(); i++) {
+            if (mapPlayerList.get(i).getBirthDay().equals(now)) {
+                marker1.position(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()))
+                        .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)))
+                        .visible(false);
+                markertemp = googleMap.addMarker(marker1);
+                tagMarkerList.add(markertemp);
+            }
+            else {
+                switch (mapPlayerList.get(i).getTagType()) {
+                    case 0:
+                        marker1.position(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)))
+                                .visible(true);
+                        markertemp = googleMap.addMarker(marker1);
+                        tagMarkerList.add(markertemp);
+                        break;
+                    case 1:
+                        marker1.position(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)))
+                                .visible(true);
+                        markertemp = googleMap.addMarker(marker1);
+                        tagMarkerList.add(markertemp);
+                        break;
+                    case 2:
+                        marker1.position(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)))
+                                .visible(true);
+                        markertemp = googleMap.addMarker(marker1);
+                        tagMarkerList.add(markertemp);
+                        break;
+                    case 3:
+                        marker1.position(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()))
+                                .visible(false);
+                        markertemp = googleMap.addMarker(marker1);
+                        tagMarkerList.add(markertemp);
+                }
             }
         }
         for(int i=0; i<tagMarkerList.size(); i++)
@@ -672,29 +689,35 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMarker
                 }
             }
          }
-        for(int i=0; i<tagMarkerList.size(); i++)
-        {
-            switch(mapPlayerList.get(i).getTagType())
+        for(int i=0; i<tagMarkerList.size(); i++) {
+            if (mapPlayerList.get(i).getBirthDay().equals(now))
             {
-                case 0:
-                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
-                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)));
-                    tagMarkerList.get(i).setVisible(true);
-                    break;
-                case 1:
-                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
-                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)));
-                    tagMarkerList.get(i).setVisible(true);
-                    break;
-                case 2:
-                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
-                    tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)));
-                    tagMarkerList.get(i).setVisible(true);
-                    break;
-                case 3:
-                    tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
-                    tagMarkerList.get(i).setVisible(false);
-                    break;
+                tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude()+0.0002, mapPlayerList.get(i).getLongitude()));
+                tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)));
+                tagMarkerList.get(i).setVisible(false);
+            }
+            else {
+                switch (mapPlayerList.get(i).getTagType()) {
+                    case 0:
+                        tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()));
+                        tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.imark, (float) 0.2)));
+                        tagMarkerList.get(i).setVisible(true);
+                        break;
+                    case 1:
+                        tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()));
+                        tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.hmark, (float) 0.2)));
+                        tagMarkerList.get(i).setVisible(true);
+                        break;
+                    case 2:
+                        tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()));
+                        tagMarkerList.get(i).setIcon(BitmapDescriptorFactory.fromBitmap(bitmapSizeByScall(R.mipmap.qmark, (float) 0.2)));
+                        tagMarkerList.get(i).setVisible(true);
+                        break;
+                    case 3:
+                        tagMarkerList.get(i).setPosition(new LatLng(mapPlayerList.get(i).getLatitude() + 0.0002, mapPlayerList.get(i).getLongitude()));
+                        tagMarkerList.get(i).setVisible(false);
+                        break;
+                }
             }
         }
     }

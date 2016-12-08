@@ -21,6 +21,7 @@ import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -35,7 +36,6 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
     public void playSound(){
         sound_pool.play(sound_error, 1f, 1f,0,0,1.5f);
     }
-    private ToggleButton Bar_GPSToggle;
     public final static int REPEAT_DELAY=1000;
     public Handler handler;
 
@@ -49,6 +49,8 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
 
         Bar_GPSToggle = (ToggleButton) findViewById(R.id.Bar_GPSToggle);
         Bar_GPSToggle.setBackgroundResource(R.mipmap.xbutton);
+        Bar_GPSToggle.setEnabled(false);
+
 
         mapFragment.getMapAsync(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -57,7 +59,6 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
     }
 
     public void onMapReady(final GoogleMap googleMap) { //매개변수로 GoogleMap 객체가 넘어옴
-
 
         handler=new Handler()
         {
@@ -156,5 +157,6 @@ public class MapsActivity1 extends MapsActivity implements OnMapReadyCallback{
                     }
                 });
     }
+
 }
 
